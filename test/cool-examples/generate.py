@@ -9,7 +9,7 @@ for i in range(len(lines)):
         line = lines[i]
         if line in ['type', 'identifier']:
             interesting_positions = [i+1] + interesting_positions
-for j in range(97):
+for j in range(98):
         pos1 = random.choice(interesting_positions)
         pos2 = random.choice(interesting_positions)
         val1 = lines[pos1]

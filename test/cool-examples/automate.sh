@@ -1,6 +1,6 @@
 #!/bin/bash
-./cool --lex test.cl
-python generate.py hs.cl-lex
+./cool --lex primes.cl
+python generate.py primes.cl-lex
 for i in *.cl-lex
 do
 ./cool --type $i
@@ -20,3 +20,4 @@ do
 mv $i `basename $i .cl2`.cl
 done
 zip automagic.zip [0-9]*.cl
+mv automagic.zip ~/Desktop
