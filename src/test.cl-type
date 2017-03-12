@@ -1,2 +1,15 @@
 class_map
-7
+6
+Int
+String
+IO
+Bool
+Object
+initializer
+x
+Int
+initializer
+y
+Object
+2
+Main

@@ -15,11 +15,13 @@ function Method(mname, formals, mtype, mbody){
 	this.formals = formals;
 	this.mtype = mtype;
 	this.mbody = mbody;
+	this.fmeth = "Method";
 }
 function Attribute(fname, ftype, initals){
 	this.fname = fname;
 	this.ftype = ftype;
 	this.finit = initals;
+	this.fmeth = "Attribute";
 }
 function Exp(eloc, ekind){
 	this.eloc = eloc;
@@ -61,10 +63,12 @@ function read(){
 function read_list(worker){
 	var llength = read();
 	console.log("readinglist of size " + llength);
+	var items = [];
 	for(var i = 0; i < llength; i++){
 //		console.log(worker + " is my worker");
-		worker();
+		items.push(worker());
 	}
+	return items;
 }
 function readCoolProgram(){
 	console.log("Starting to read");
@@ -88,6 +92,7 @@ function read_cool_class(){
 	var features = read_list(read_features);
 //	return new CoolClass(cname, inherit, features)
 	userClasses.push(new CoolClass(cname, inherit, features));
+	return new CoolClass(cname, inherit, features);
 }
 
 function read_features(){
@@ -96,21 +101,21 @@ function read_features(){
 		var fname = read_id();
 		var ftype = read_id();
 //		console.log("Attr: " + fname.name + " " + ftype.name);
-//		return new Attribute(fname, ftype, []);
+		return new Attribute(fname, ftype, []);
 	}
 	else if(citem == "attribute_init"){
 		var fname = read_id();
 		var ftype = read_id();
 		var finit = read_exp();
 //		console.log("Attr_i: " + fname.name + " " + ftype.name);
-//		return new Attribute(fname, ftype, finit);
+		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
 		var mname = read_id();
 		var formals = read_list(read_formal);
 		var mtype = read_id();
 		var mbody = read_exp();
-//		return new Method(mname, formals, mtype, mbody);
+		return new Method(mname, formals, mtype, mbody);
 	}
 	else{
 		console.log("nope!");
@@ -120,7 +125,7 @@ function read_features(){
 function read_formal(){
 	var fname = read_id();
 	var ftype = read_id();
-//	return new Formal(fname, ftype);
+	return new Formal(fname, ftype);
 }
 
 function read_id(){
@@ -136,12 +141,12 @@ function read_exp(){
 //	console.log("My expression type: " + citem);
 	if(citem == "integer"){
 		var ival = read();
-//		return new Integer(ival);
+		return new Integer(ival);
 	}
 	else{
 		console.log("Do the other expressions! " + citem);
 	}
-//	return new Exp(eloc, ekind);
+	return new Exp(eloc, ekind);
 }
 
 function check(item, list){
@@ -199,11 +204,59 @@ function write(data){
 	});
 }
 
+function output_exp(expression){
+//	console.log(expression.value);
+	// TODO: wrap Integer so we can check for type integer
+	
+//	write(expression.eloc + "\n");
+	if(check(expression.ekind, "Integer")){
+		write("integer\n" + expression.value  + "\n");
+	}
+}
 
 writeFirst("class_map\n"+ all_classes.length + "\n");
 var ind = 0;
+console.log(user_classes);
 for(ind in all_classes){
-	console.log(all_classes[ind]);
+	write(all_classes[ind] + "\n");
+	
+	if(check(all_classes[ind], user_classes)){
+		// we can do stuff with it
+		var indof = user_classes.indexOf(all_classes[ind]);
+		var attrib = [];
+//		console.log(userClasses[indof]);
+		var len = userClasses[indof].features.length;
+		for(var i = 0; i < len; i++){
+			if (userClasses[indof].features[i].fmeth == "Attribute"){
+				attrib.push(userClasses[indof].features[i]);
+			}
+			else if( userClasses[indof].features[i].fmeth == "Method"){
+				// do stuff later!
+			}
+			else{
+				console.log("You DUN FUCKED UPP");
+			}
+		}
+//		console.log(attrib.length);
+		
+		write(attrib.length + "\n");
+		for(var i = 0; i < attrib.length; i++){
+			console.log(attrib[i]);
+			
+			if(attrib[i].initials != ""){
+				write("initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
+				output_exp(attrib[i].finit);
+			}
+			else{
+				write("no_initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
+			}
+		
+		}
+	}
+	else{
+		// not found
+//		console.log("Dun broked");
+	}
 }
 
 
