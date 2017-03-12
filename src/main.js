@@ -62,7 +62,7 @@ function read(){
 
 function read_list(worker){
 	var llength = read();
-	console.log("readinglist of size " + llength);
+//	console.log("readinglist of size " + llength);
 	var items = [];
 	for(var i = 0; i < llength; i++){
 //		console.log(worker + " is my worker");
@@ -71,7 +71,7 @@ function read_list(worker){
 	return items;
 }
 function readCoolProgram(){
-	console.log("Starting to read");
+//	console.log("Starting to read");
 	read_list(read_cool_class);
 }
 
@@ -141,16 +141,16 @@ function read_exp(){
 //	console.log("My expression type: " + citem);
 	if(citem == "integer"){
 		var ival = read();
-		return new Integer(ival);
+		ekind = new Integer(ival);
 	}
 	else{
-		console.log("Do the other expressions! " + citem);
+//		console.log("Do the other expressions! " + citem);
 	}
 	return new Exp(eloc, ekind);
 }
 
 function check(item, list){
-	for (index in list){
+	for (var index = 0; index < list.length; index++){
 		if(item == list[index]){
 			return true;
 		}
@@ -168,12 +168,12 @@ for (ind in userClasses) {
 	user_classes.push(userClasses[ind].cname.name);
 }
 var all_classes = base_classes.concat(user_classes);
-console.log(all_classes);
+//console.log(all_classes);
 
 for (ind in userClasses){
 	// Ensure that we inherit from allowable things
 	var myinherit = userClasses[ind].inherit.name;
-	console.log(myinherit);
+//	console.log(myinherit);
 	if(myinherit == ""){
 		// no inherit
 	}
@@ -187,9 +187,11 @@ for (ind in userClasses){
 	}
 }
 var fname = process.argv[2].slice(0, -4);
+//fname += "-type2";
 fname += "-type";
+
 function writeFirst(data){
-	fs.writeFile(fname, data, function(err){
+	fs.writeFileSync(fname, data, function(err){
 		if(err){
 			return console.log(err);
 		}
@@ -197,7 +199,7 @@ function writeFirst(data){
 }
 
 function write(data){
-	fs.writeFile(fname, data, {flag: "a" }, function(err){
+	fs.appendFileSync(fname, data, function(err){
 		if(err){
 			return console.log(err);
 		}
@@ -205,20 +207,26 @@ function write(data){
 }
 
 function output_exp(expression){
-//	console.log(expression.value);
+//	console.log(expression.ekind);
 	// TODO: wrap Integer so we can check for type integer
 	
-//	write(expression.eloc + "\n");
-	if(check(expression.ekind, "Integer")){
-		write("integer\n" + expression.value  + "\n");
-	}
+	write("" + expression.eloc + "\n");
+
+	write("integer\n" + expression.ekind.value  + "\n");
+
 }
+
+all_classes.sort();
+//console.log(all_classes);
 
 writeFirst("class_map\n"+ all_classes.length + "\n");
 var ind = 0;
-console.log(user_classes);
+//console.log(all_classes);
+
+
 for(ind in all_classes){
 	write(all_classes[ind] + "\n");
+	
 	
 	if(check(all_classes[ind], user_classes)){
 		// we can do stuff with it
@@ -238,10 +246,10 @@ for(ind in all_classes){
 			}
 		}
 //		console.log(attrib.length);
-		
+	
 		write(attrib.length + "\n");
 		for(var i = 0; i < attrib.length; i++){
-			console.log(attrib[i]);
+//			console.log(attrib[i]);
 			
 			if(attrib[i].initials != ""){
 				write("initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
@@ -254,8 +262,8 @@ for(ind in all_classes){
 		}
 	}
 	else{
-		// not found
-//		console.log("Dun broked");
+		write("0\n");
+//		console.log(all_classes[ind] + " should have 0");
 	}
 }
 

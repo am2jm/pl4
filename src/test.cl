@@ -1,5 +1,5 @@
 class Main inherits IO {
-	x : Int <- 1;
-	y : Object <- 2;
-
+	x : Int <- 666;
+	y : Object <- 999;
+	main() : Object { 777 };
 };

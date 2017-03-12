@@ -4,7 +4,7 @@ Main
 inherits
 1
 IO
-2
+3
 attribute_init
 2
 x
@@ -12,7 +12,7 @@ x
 Int
 2
 integer
-1
+666
 attribute_init
 3
 y
@@ -20,4 +20,13 @@ y
 Object
 3
 integer
-2
+999
+method
+4
+main
+0
+4
+Object
+4
+integer
+777
