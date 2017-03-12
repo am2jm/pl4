@@ -1,7 +1,9 @@
-1
+2
 1
 Main
-no_inherits
+inherits
+1
+IO
 2
 attribute_init
 2
@@ -19,3 +21,14 @@ Object
 3
 integer
 2
+6
+SecondClass
+inherits
+6
+Divya
+1
+attribute_no_init
+7
+z
+7
+Int
