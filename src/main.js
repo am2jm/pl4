@@ -183,8 +183,28 @@ for (ind in userClasses){
 }
 var fname = process.argv[2].slice(0, -4);
 fname += "-type";
-console.log(fname);
+function writeFirst(data){
+	fs.writeFile(fname, data, function(err){
+		if(err){
+			return console.log(err);
+		}
+	});
+}
 
+function write(data){
+	fs.writeFile(fname, data, {flag: "a" }, function(err){
+		if(err){
+			return console.log(err);
+		}
+	});
+}
+
+
+writeFirst("class_map\n"+ all_classes.length + "\n");
+var ind = 0;
+for(ind in all_classes){
+	console.log(all_classes[ind]);
+}
 
 
 
