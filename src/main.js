@@ -187,8 +187,10 @@ for (ind in userClasses){
 	}
 }
 var fname = process.argv[2].slice(0, -4);
-//fname += "-type2";
-fname += "-type";
+fname += "-type2";
+//fname += "-type";
+
+//console.log(fname);
 
 function writeFirst(data){
 	fs.writeFileSync(fname, data, function(err){
