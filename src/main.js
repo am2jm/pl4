@@ -7,9 +7,6 @@ fs = require('fs');//, readline = require('readline');
 //	console: false
 //});
 
-function Integer(ival){
-	this.value = ival;
-}
 function Method(mname, formals, mtype, mbody){
 	this.mname = mname;
 	this.formals = formals;
@@ -39,6 +36,18 @@ function CoolClass(cname, inhert, features){
 	this.cname = cname;
 	this.inherit = inhert;
 	this.features = features;
+}
+function Integer(ival){
+	this.etype = "integer";
+	this.value = ival;
+}
+function Bool(ival){
+	this.etype = "bool";
+	this.value = ival;
+}
+function String(ival){
+	this.etype = "string";
+	this.value = ival;
 }
 
 function readFile(){
@@ -205,9 +214,13 @@ function output_exp(expression){
 	// TODO: wrap Integer so we can check for type integer
 
 	write("" + expression.eloc + "\n");
-
-	write("integer\n" + expression.ekind.value  + "\n");
-
+	
+	if(check(expression.ekind.etype, ["integer", "string", "bool"])){
+		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
+	}
+	else if (expression.ekind.etype == "not"){
+		write("This is a different type");
+	}
 }
 
 all_classes.sort();
