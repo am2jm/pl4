@@ -43,7 +43,7 @@ function CoolClass(cname, inhert, features){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\r\n")
+	contents = contents.split(/[\r\n]+/);
 	contents.pop();
 	return contents;
 }
@@ -187,8 +187,8 @@ for (ind in userClasses){
 	}
 }
 var fname = process.argv[2].slice(0, -4);
-fname += "-type2";
-//fname += "-type";
+//fname += "-type2";
+fname += "-type";
 
 //console.log(fname);
 
