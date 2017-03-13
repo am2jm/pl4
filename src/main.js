@@ -193,25 +193,17 @@ fname += "-type";
 //console.log(fname);
 
 function writeFirst(data){
-	fs.writeFileSync(fname, data, function(err){
-		if(err){
-			return console.log(err);
-		}
-	});
+	fs.writeFileSync(fname, data);
 }
 
 function write(data){
-	fs.appendFileSync(fname, data, function(err){
-		if(err){
-			return console.log(err);
-		}
-	});
+	fs.appendFileSync(fname, data);
 }
 
 function output_exp(expression){
 //	console.log(expression.ekind);
 	// TODO: wrap Integer so we can check for type integer
-	
+
 	write("" + expression.eloc + "\n");
 
 	write("integer\n" + expression.ekind.value  + "\n");
@@ -228,8 +220,8 @@ var ind = 0;
 
 for(ind in all_classes){
 	write(all_classes[ind] + "\n");
-	
-	
+
+
 	if(check(all_classes[ind], user_classes)){
 		// we can do stuff with it
 		var indof = user_classes.indexOf(all_classes[ind]);
@@ -248,11 +240,11 @@ for(ind in all_classes){
 			}
 		}
 //		console.log(attrib.length);
-	
+
 		write(attrib.length + "\n");
 		for(var i = 0; i < attrib.length; i++){
 //			console.log(attrib[i]);
-			
+
 			if(attrib[i].initials != ""){
 				write("initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
 				output_exp(attrib[i].finit);
@@ -260,7 +252,7 @@ for(ind in all_classes){
 			else{
 				write("no_initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
 			}
-		
+
 		}
 	}
 	else{
@@ -268,15 +260,3 @@ for(ind in all_classes){
 //		console.log(all_classes[ind] + " should have 0");
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
