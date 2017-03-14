@@ -63,6 +63,14 @@ function Negate(item){
 	this.etype = "negate";
 	this.value = item;
 }
+function IsVoid(etype, line){
+	this.etype = etype;
+	this.value = line;
+}
+function NewType(etype, item){
+	this.etype = etype;
+	this.value = item;
+}
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
@@ -122,7 +130,7 @@ function read_features(){
 	var citem = read();
 	
 	
-//	console.log(citem + " reading this item!");
+//	console.log(citem + " reading this item!" + process.argv[2]);
 	
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
@@ -166,6 +174,7 @@ function read_exp(){
 	var ekind = "";
 	var citem = read();
 //	console.log("My expression type: " + citem);
+	
 	if(citem == "integer"){
 		var ival = read();
 		ekind = new Integer(ival);
@@ -194,6 +203,18 @@ function read_exp(){
 	else if(citem == "negate"){
 		ekind = new Negate(read_exp());
 	}
+	else if(citem == "isvoid"){
+//		console.log("I'm void?" + citem);
+		var item = read_exp();
+		ekind = new IsVoid(citem, item);
+//		console.log(ekind);
+	}
+	else if(citem == "new"){
+		ekind = new NewType(citem, read_id());
+	}
+	else{
+		console.log("Have not done:" + citem + process.argv[2]);
+	}
 //	console.log(ekind + "");
 	return new Exp(eloc, ekind);
 }
@@ -221,6 +242,7 @@ var all_classes = base_classes.concat(user_classes);
 
 for (ind in userClasses){
 	// Ensure that we inherit from allowable things
+	// this is checking all of the user classes
 	var myinherit = userClasses[ind].inherit.name;
 //	console.log(myinherit);
 	if(myinherit == ""){
@@ -231,7 +253,7 @@ for (ind in userClasses){
 		break;
 	}
 	else if( !check(myinherit, all_classes) ){
-		console.log("ERROR: " + userClasses[ind].inherit.loc + ": Type-Check: inherits from undefined class " + myinherit);
+		console.log("ERROR: " + userClasses[ind].inherit.loc + ": Type-Check: inherits from undefined class BOI " + myinherit);
 		break;
 	}
 }
@@ -241,10 +263,15 @@ fname += "-type";
 
 //console.log(fname);
 
+// This creates the file to be written to
+// ensures it completely replaces any existing files
 function writeFirst(data){
 	fs.writeFileSync(fname, data);
 }
 
+// a function we can call to do all the writing
+// will just append to the file to write all the rest of
+// the class map
 function write(data){
 	fs.appendFileSync(fname, data);
 }
@@ -276,9 +303,13 @@ function output_exp(expression){
 		output_exp(expression.ekind.val1);
 		output_exp(expression.ekind.val2);
 	}
-	else if(expression.ekind.etype == "negate"){
-		write("negate\n");
+	else if(check(expression.ekind.etype, ["negate", "isvoid"])){
+		write(expression.ekind.etype + "\n");
 		output_exp(expression.ekind.value);
+	}
+	else if(expression.ekind.etype == "new"){
+		write(expression.ekind.etype + "\n");
+		write(expression.ekind.value.loc + "\n" + expression.ekind.value.name+ "\n");
 	}
 	else{
 		write("is it here?\n");
