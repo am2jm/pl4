@@ -59,6 +59,10 @@ function Comp(mtype, item1, item2){
 	this.val1 = item1;
 	this.val2 = item2;
 }
+function Negate(item){
+	this.etype = "negate";
+	this.value = item;
+}
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
@@ -182,10 +186,13 @@ function read_exp(){
 //		var iloc = read();
 		ekind = read_id();
 	}
-	else if(check(citem, ["lt", "eq", "le"])){
+	else if(check(citem, ["lt", "eq", "le", "plus", "minus", "times", "divide"])){
 		var item1 = read_exp();
 		var item2 = read_exp();
 		ekind = new Comp(citem, item1, item2);
+	}
+	else if(citem == "negate"){
+		ekind = new Negate(read_exp());
 	}
 //	console.log(ekind + "");
 	return new Exp(eloc, ekind);
@@ -264,10 +271,14 @@ function output_exp(expression){
 		write("identifier\n" + expression.ekind.loc + "\n");
 		write(expression.ekind.name + "\n");
 	}
-	else if(check(expression.ekind.etype, ["lt", "eq", "le"])){
+	else if(check(expression.ekind.etype, ["lt", "eq", "le", "plus", "minus", "times", "divide"])){
 		write(expression.ekind.etype + "\n");
 		output_exp(expression.ekind.val1);
 		output_exp(expression.ekind.val2);
+	}
+	else if(expression.ekind.etype == "negate"){
+		write("negate\n");
+		output_exp(expression.ekind.value);
 	}
 	else{
 		write("is it here?\n");
