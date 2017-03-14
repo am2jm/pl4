@@ -1,16 +1,12 @@
 
-
-class A {
-
-   var : Int <- 0;
-
-   value() : Int { var };
-
-   set_var(num : Int) : SELF_TYPE {
+class Main inherits IO {
+    x : Int <- 5;
+    y : Int <- 999;
+   main() : Object {
       {
-         var <- num;
-         self;
+          y <- x + y;
+          x <- x + y;
       }
-   };
 
+};
 };
