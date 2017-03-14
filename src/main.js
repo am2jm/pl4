@@ -106,7 +106,6 @@ function read_cool_class(){
 
 function read_features(){
 	var citem = read();
-	console.log(citem, "\n");
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
 		var ftype = read_id();
@@ -117,7 +116,7 @@ function read_features(){
 		var fname = read_id();
 		var ftype = read_id();
 		var finit = read_exp();
-//		console.log("Attr_i: " + fname.name + " " + ftype.name);
+		console.log("Attr_i: " + fname.name + " " + ftype.name);
 		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
@@ -153,9 +152,16 @@ function read_exp(){
 		var ival = read();
 		ekind = new Integer(ival);
 	}
-	else{
+	else if(check(citem, ["true", "false"])){
+		ekind = new Bool(citem);
+//		console.log(ekind + "hello");
+	}
+	else if(citem == "string"){
+		var ival = read();
+		ekind = new String(ival);
 //		console.log("Do the other expressions! " + citem);
 	}
+//	console.log("my exp:" + ekind);
 	return new Exp(eloc, ekind);
 }
 
@@ -215,12 +221,14 @@ function output_exp(expression){
 	// TODO: wrap Integer so we can check for type integer
 
 	write("" + expression.eloc + "\n");
-
-	if(check(expression.ekind.etype, ["integer", "string", "bool"])){
+//	console.log("my exp:", expression);
+	if(check(expression.ekind.etype, ["integer", "string"])){
+		// console log the thing!
+//		console.log("This is me?" + expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 	}
-	else if (expression.ekind.etype == "not"){
-		write("This is a different type");
+	else if (expression.ekind.etype == "bool"){
+		write(expression.ekind.value  + "\n");
 	}
 }
 
