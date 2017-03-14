@@ -4,7 +4,7 @@ Main
 inherits
 2
 IO
-3
+4
 attribute_init
 3
 x
@@ -19,8 +19,10 @@ y
 4
 Int
 4
-integer
-999
+self_dispatch
+4
+value
+0
 method
 5
 main
@@ -58,3 +60,12 @@ x
 identifier
 8
 y
+method
+12
+value
+0
+12
+Int
+13
+integer
+666

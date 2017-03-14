@@ -18,8 +18,10 @@ initializer
 y
 Int
 4
-integer
-999
+self_dispatch
+4
+value
+0
 Object
 0
 String
