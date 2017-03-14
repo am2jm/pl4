@@ -1,31 +1,31 @@
 class_map
 6
-Bool
+is it here?Bool
 0
-IO
+is it here?IO
 0
-Int
+is it here?Int
 0
-Main
+is it here?Main
 3
 initializer
 x
 Int
-2
+this is eloc2
 integer
 666
 initializer
 y
 Object
-3
+this is eloc3
 integer
 999
 initializer
 z
 Bool
-4
+this is eloc4
 true
-Object
+is it here?Object
 0
-String
+is it here?String
 0

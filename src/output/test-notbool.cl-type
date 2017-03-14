@@ -21,11 +21,12 @@ Object
 integer
 999
 initializer
-a
-String
+z
+Bool
 4
-string
-divya
+not
+4
+true
 Object
 0
 String

@@ -21,11 +21,13 @@ this is eloc3
 integer
 999
 initializer
-a
-String
+z
+Bool
 this is eloc4
-string
-divya
+not
+this is eloc4
+true
+undefined
 is it here?Object
 0
 is it here?String

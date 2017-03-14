@@ -1,6 +1,6 @@
 class Main inherits IO {
 	x : Int <- 666;
 	y : Object <- 999;
-	a : String <- "divya";
+	z : Bool <- not true;
 	main() : Object { 777 };
 };

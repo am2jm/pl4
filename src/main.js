@@ -49,6 +49,10 @@ function String(ival){
 	this.etype = "string";
 	this.value = ival;
 }
+function Not(ival){
+	this.etype = "not";
+	this.value = ival;
+}
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
@@ -116,7 +120,7 @@ function read_features(){
 		var fname = read_id();
 		var ftype = read_id();
 		var finit = read_exp();
-		console.log("Attr_i: " + fname.name + " " + ftype.name);
+//		console.log("Attr_i: " + fname.name + " " + ftype.name);
 		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
@@ -151,6 +155,9 @@ function read_exp(){
 	if(citem == "integer"){
 		var ival = read();
 		ekind = new Integer(ival);
+	}
+	else if(citem == "not"){
+		ekind = new Not(read_exp());
 	}
 	else if(check(citem, ["true", "false"])){
 		ekind = new Bool(citem);
@@ -217,18 +224,25 @@ function write(data){
 }
 
 function output_exp(expression){
-//	console.log(expression.ekind);
+//	console.log(expression);
 	// TODO: wrap Integer so we can check for type integer
 
-	write("" + expression.eloc + "\n");
-//	console.log("my exp:", expression);
+	write("this is eloc" + expression.eloc + "\n");	
 	if(check(expression.ekind.etype, ["integer", "string"])){
-		// console log the thing!
-//		console.log("This is me?" + expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
+	}
+	else if (expression.ekind.etype == "not"){
+//		console.log("my value!", expression.ekind.value);
+		write("not"  + "\n")
+		write(output_exp(expression.ekind.value) + "\n");
+		console.log("in not " + expression.ekind.value);
 	}
 	else if (expression.ekind.etype == "bool"){
 		write(expression.ekind.value  + "\n");
+		console.log(expression.ekind);	
+	}
+	else{
+		write("is it here?\n");
 	}
 }
 
@@ -241,7 +255,7 @@ var ind = 0;
 
 
 for(ind in all_classes){
-	write(all_classes[ind] + "\n");
+	write("is it here?" + all_classes[ind] + "\n");
 
 
 	if(check(all_classes[ind], user_classes)){
@@ -266,15 +280,16 @@ for(ind in all_classes){
 		write(attrib.length + "\n");
 		for(var i = 0; i < attrib.length; i++){
 //			console.log(attrib[i]);
-
+			
 			if(attrib[i].initials != ""){
 				write("initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
+				
 				output_exp(attrib[i].finit);
 			}
 			else{
 				write("no_initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
 			}
-
+//			write("where is undef");
 		}
 	}
 	else{

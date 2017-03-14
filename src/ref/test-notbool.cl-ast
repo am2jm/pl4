@@ -23,12 +23,13 @@ integer
 999
 attribute_init
 4
-a
+z
 4
-String
+Bool
 4
-string
-divya
+not
+4
+true
 method
 5
 main
