@@ -229,27 +229,31 @@ for (var q = 0; q < userClasses.length; q++) {
 	user_classes.push(userClasses[q].cname.name);
 }
 var all_classes = base_classes.concat(user_classes);
-console.log(all_classes);
-console.log("were all: following user:");
-console.log(user_classes);
+//console.log(all_classes);
+//console.log("were all: following user:");
+//console.log(user_classes);
 
 
 for(var q = 0; q < userClasses.length; q++){
 	// Ensure that we inherit from allowable things
 	// this is checking all of the user classes
-	var myinherit = userClasses[q].inherit.name;
+	
 //	console.log(myinherit);
-	if(myinherit == ""){
+	if(userClasses.inherit == ""){
 		// no inherit
 	}
-	else if( check(myinherit, ["Int", "String", "Bool"]) ){
-		console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: cannot inherit from Integer!");
-		break;
-	}
-	else if( !check(myinherit, all_classes) ){
-		console.log(myinherit + " am inheriiting?");
-		console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: inherits from undefined class BOI " + myinherit);
-		break;
+	else{
+		var myinherit = userClasses[q].inherit.name;
+		
+		if( check(myinherit, ["Int", "String", "Bool"]) ){
+			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: cannot inherit from Integer!");
+			break;
+		}
+		else if( !check(myinherit, all_classes) ){
+			console.log(myinherit + " am inheriiting?");
+			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: inherits from undefined class BOI " + myinherit);
+			break;
+		}
 	}
 }
 var fname = process.argv[2].slice(0, -4);
