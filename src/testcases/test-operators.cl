@@ -4,5 +4,6 @@ class Main inherits IO {
 	y : Int <- 66-65;
 	z : Int <- 88*98;
 	a : Int <- 77 / 78;
+
 	main() : Object { 777 };
 };
