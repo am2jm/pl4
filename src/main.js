@@ -227,19 +227,19 @@ function output_exp(expression){
 //	console.log(expression);
 	// TODO: wrap Integer so we can check for type integer
 
-	write("this is eloc" + expression.eloc + "\n");	
+	write("" + expression.eloc + "\n");	
 	if(check(expression.ekind.etype, ["integer", "string"])){
 		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 	}
 	else if (expression.ekind.etype == "not"){
 //		console.log("my value!", expression.ekind.value);
 		write("not"  + "\n")
-		write(output_exp(expression.ekind.value) + "\n");
-		console.log("in not " + expression.ekind.value);
+		output_exp(expression.ekind.value);
+//		console.log("in not " + expression.ekind.value);
 	}
 	else if (expression.ekind.etype == "bool"){
 		write(expression.ekind.value  + "\n");
-		console.log(expression.ekind);	
+//		console.log(expression.ekind);	
 	}
 	else{
 		write("is it here?\n");
@@ -255,7 +255,7 @@ var ind = 0;
 
 
 for(ind in all_classes){
-	write("is it here?" + all_classes[ind] + "\n");
+	write("" + all_classes[ind] + "\n");
 
 
 	if(check(all_classes[ind], user_classes)){
@@ -291,6 +291,7 @@ for(ind in all_classes){
 			}
 //			write("where is undef");
 		}
+		
 	}
 	else{
 		write("0\n");
