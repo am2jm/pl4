@@ -29,9 +29,9 @@ function Formal(fname, ftype){
 	this.fname = fname;
 	this.ftype = ftype;
 }
-function CoolClass(cname, inherit, features){
+function CoolClass(cname, inhert, features){
 	this.cname = cname;
-	this.inherit = inherit;
+	this.inherit = inhert;
 	this.features = features;
 }
 function Integer(ival){
@@ -110,7 +110,6 @@ function read_cool_class(){
 		inherit = read_id();
 	}
 	else if(citem == "no_inherits"){
-		inherit = "non_inherits";
 	}
 	else{
 		console.log("nope!");
@@ -230,72 +229,56 @@ for (var q = 0; q < userClasses.length; q++) {
 	user_classes.push(userClasses[q].cname.name);
 }
 var all_classes = base_classes.concat(user_classes);
-//console.log(all_classes);
-//console.log("were all: following user:");
-//console.log(user_classes);
-//console.log("user-classes!");
-//console.log(userClasses);
-
+console.log(all_classes);
+console.log("were all: following user:");
+console.log(user_classes);
 
 
 for(var q = 0; q < userClasses.length; q++){
 	// Ensure that we inherit from allowable things
 	// this is checking all of the user classes
-	
-	if(userClasses[q].inherit == "non_inherits"){
+	var myinherit = userClasses[q].inherit.name;
+//	console.log(myinherit);
+	if(myinherit == ""){
 		// no inherit
 	}
-	else{
-		var myinherit = userClasses[q].inherit.name;
-		
-		if( check(myinherit, ["Int", "String", "Bool"]) ){
-			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: cannot inherit from Integer!");
-			break;
-		}
-		else if( !check(myinherit, all_classes) ){
-			console.log(myinherit + " am inheriiting?");
-			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: you inherits from not-ok class BOI " + myinherit);
-			break;
-		}
+	else if( check(myinherit, ["Int", "String", "Bool"]) ){
+		console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: cannot inherit from Integer!");
+		break;
+	}
+	else if( !check(myinherit, all_classes) ){
+		console.log(myinherit + " am inheriiting?");
+		console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: inherits from undefined class BOI " + myinherit);
+		break;
 	}
 }
 var fname = process.argv[2].slice(0, -4);
-//fname += "-type2";
 fname += "-type";
 
-//console.log(fname);
 
-// This creates the file to be written to
-// ensures it completely replaces any existing files
+//-------------------SECTION X: Helper Functions
+
 function writeFirst(data){
 	fs.writeFileSync(fname, data);
 }
 
-// a function we can call to do all the writing
-// will just append to the file to write all the rest of
-// the class map
 function write(data){
 	fs.appendFileSync(fname, data);
 }
 
 // A function that will output each expression that can be found, will handle all the types of expressions here
 function output_exp(expression){
-//	console.log(expression);
-	// TODO: wrap Integer so we can check for type integer
 
 	write("" + expression.eloc + "\n");
 	if(check(expression.ekind.etype, ["integer", "string"])){
 		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 	}
 	else if (expression.ekind.etype == "not"){
-//		console.log("my value!", expression.ekind.value);
 		write("not"  + "\n")
 		output_exp(expression.ekind.value);
-//		console.log("in not " + expression.ekind.value);
 	}
 	else if (expression.ekind.etype == "bool"){
 		write(expression.ekind.value  + "\n");
-//		console.log(expression.ekind);
 	}
 	else if(expression.ekind.etype == "identifier"){
 		write("identifier\n" + expression.ekind.loc + "\n");
@@ -319,44 +302,34 @@ function output_exp(expression){
 	}
 }
 
-//
-// Here is the actual code to create and print the class map
-// The above functions are called from here generally
-//
+
 all_classes.sort();
-//console.log(all_classes);
 
 writeFirst("class_map\n"+ all_classes.length + "\n");
 var ind = 0;
-//console.log(all_classes);
 
 
 for(ind in all_classes){
 	write("" + all_classes[ind] + "\n");
 
-
 	if(check(all_classes[ind], user_classes)){
-		// we can do stuff with it
 		var indof = user_classes.indexOf(all_classes[ind]);
 		var attrib = [];
-//		console.log(userClasses[indof]);
 		var len = userClasses[indof].features.length;
+
 		for(var i = 0; i < len; i++){
 			if (userClasses[indof].features[i].fmeth == "Attribute"){
 				attrib.push(userClasses[indof].features[i]);
 			}
 			else if( userClasses[indof].features[i].fmeth == "Method"){
-				// do stuff later!
 			}
 			else{
-				console.log("You DUN FUCKED UPP");
+				console.log("Neither an attribute or a function");
 			}
 		}
-//		console.log(attrib.length);
 
 		write(attrib.length + "\n");
 		for(var i = 0; i < attrib.length; i++){
-//			console.log(attrib[i]);
 
 			if(attrib[i].initials != ""){
 				write("initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
@@ -366,12 +339,10 @@ for(ind in all_classes){
 			else{
 				write("no_initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
 			}
-//			write("where is undef");
 		}
 
 	}
 	else{
 		write("0\n");
-//		console.log(all_classes[ind] + " should have 0");
 	}
 }
