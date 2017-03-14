@@ -54,6 +54,11 @@ function Not(ival){
 	this.etype = "not";
 	this.value = ival;
 }
+function Comp(mtype, item1, item2){
+	this.etype = mtype;
+	this.val1 = item1;
+	this.val2 = item2;
+}
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
@@ -176,7 +181,11 @@ function read_exp(){
 //		var ival = read();
 //		var iloc = read();
 		ekind = read_id();
-		
+	}
+	else if(check(citem, ["lt", "eq", "le"])){
+		var item1 = read_exp();
+		var item2 = read_exp();
+		ekind = new Comp(citem, item1, item2);
 	}
 //	console.log(ekind + "");
 	return new Exp(eloc, ekind);
@@ -254,6 +263,11 @@ function output_exp(expression){
 	else if(expression.ekind.etype == "identifier"){
 		write("identifier\n" + expression.ekind.loc + "\n");
 		write(expression.ekind.name + "\n");
+	}
+	else if(check(expression.ekind.etype, ["lt", "eq", "le"])){
+		write(expression.ekind.etype + "\n");
+		output_exp(expression.ekind.val1);
+		output_exp(expression.ekind.val2);
 	}
 	else{
 		write("is it here?\n");
