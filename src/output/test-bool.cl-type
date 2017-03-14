@@ -7,7 +7,7 @@ IO
 Int
 0
 Main
-2
+3
 initializer
 x
 Int
@@ -20,6 +20,11 @@ Object
 3
 integer
 999
+initializer
+z
+Bool
+4
+true
 Object
 0
 String

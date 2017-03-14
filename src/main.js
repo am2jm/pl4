@@ -106,6 +106,7 @@ function read_cool_class(){
 
 function read_features(){
 	var citem = read();
+	console.log(citem, "\n");
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
 		var ftype = read_id();
@@ -127,7 +128,7 @@ function read_features(){
 		return new Method(mname, formals, mtype, mbody);
 	}
 	else{
-		console.log("nope!");
+		console.log("invalid!");
 	}
 }
 
@@ -214,7 +215,7 @@ function output_exp(expression){
 	// TODO: wrap Integer so we can check for type integer
 
 	write("" + expression.eloc + "\n");
-	
+
 	if(check(expression.ekind.etype, ["integer", "string", "bool"])){
 		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 	}
