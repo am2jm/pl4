@@ -1,11 +1,7 @@
 
 fs = require('fs');//, readline = require('readline');
 
-//var rd = readline.createInterface({
-//	input: fs.createReadStream(process.argv[2]),
-////	output: process.stdout,
-//	console: false
-//});
+//------------SECTION 1: define types--------------------------------------
 
 function Method(mname, formals, mtype, mbody){
 	this.mname = mname;
@@ -72,6 +68,8 @@ function NewType(etype, item){
 	this.value = item;
 }
 
+//------------SECTION 2: Read File and build AST-------------------------------
+
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
 	contents = contents.split(/[\r\n]+/);
@@ -84,25 +82,23 @@ var myindex = 0;
 var userClasses = [];
 var identifiers = [];
 
+//helper function to consume input from the ast
 function read(){
 	var item = myAST[myindex];
 	myindex++;
 	return item;
 }
 
-
+//------------SECTION 3: Traverse AST and -------------------------------
 function read_list(worker){
 	var llength = read();
-//	console.log("readinglist of size " + llength);
 	var items = [];
 	for(var i = 0; i < llength; i++){
-//		console.log(worker + " is my worker");
 		items.push(worker());
 	}
 	return items;
 }
 function readCoolProgram(){
-//	console.log("Starting to read");
 	read_list(read_cool_class);
 }
 
@@ -110,7 +106,6 @@ function read_cool_class(){
 	var cname = read_id();
 	var inherit = "";
 	var citem = read();
-//		console.log("Class name: " + cname.name);
 	if(citem == "inherits"){
 		inherit = read_id();
 	}
@@ -119,30 +114,27 @@ function read_cool_class(){
 	else{
 		console.log("nope!");
 	}
-//	}
+
 	var features = read_list(read_features);
-//	return new CoolClass(cname, inherit, features)
 	userClasses.push(new CoolClass(cname, inherit, features));
 	return new CoolClass(cname, inherit, features);
 }
 
 function read_features(){
 	var citem = read();
-	
-	
+
+
 //	console.log(citem + " reading this item!" + process.argv[2]);
-	
+
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
 		var ftype = read_id();
-//		console.log("Attr: " + fname.name + " " + ftype.name);
 		return new Attribute(fname, ftype, []);
 	}
 	else if(citem == "attribute_init"){
 		var fname = read_id();
 		var ftype = read_id();
 		var finit = read_exp();
-//		console.log("Attr_i: " + fname.name + " " + ftype.name);
 		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
@@ -174,7 +166,7 @@ function read_exp(){
 	var ekind = "";
 	var citem = read();
 //	console.log("My expression type: " + citem);
-	
+
 	if(citem == "integer"){
 		var ival = read();
 		ekind = new Integer(ival);
@@ -229,12 +221,7 @@ function check(item, list){
 }
 
 readCoolProgram();
-//console.log(myindex);
 
-//
-// Setup the base classes here so we know what they are
-// Also take notes of all of the user classes that were defined
-//
 
 var base_classes = ["Int", "String", "Bool", "IO", "Object"];
 var user_classes = [];
@@ -289,7 +276,7 @@ function output_exp(expression){
 //	console.log(expression);
 	// TODO: wrap Integer so we can check for type integer
 
-	write("" + expression.eloc + "\n");	
+	write("" + expression.eloc + "\n");
 	if(check(expression.ekind.etype, ["integer", "string"])){
 		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
 	}
@@ -301,7 +288,7 @@ function output_exp(expression){
 	}
 	else if (expression.ekind.etype == "bool"){
 		write(expression.ekind.value  + "\n");
-//		console.log(expression.ekind);	
+//		console.log(expression.ekind);
 	}
 	else if(expression.ekind.etype == "identifier"){
 		write("identifier\n" + expression.ekind.loc + "\n");
@@ -363,10 +350,10 @@ for(ind in all_classes){
 		write(attrib.length + "\n");
 		for(var i = 0; i < attrib.length; i++){
 //			console.log(attrib[i]);
-			
+
 			if(attrib[i].initials != ""){
 				write("initializer\n"+ attrib[i].fname.name + "\n" +  attrib[i].ftype.name + "\n");
-				
+
 				output_exp(attrib[i].finit);
 			}
 			else{
@@ -374,7 +361,7 @@ for(ind in all_classes){
 			}
 //			write("where is undef");
 		}
-		
+
 	}
 	else{
 		write("0\n");
