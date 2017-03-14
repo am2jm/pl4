@@ -25,6 +25,7 @@ function Exp(eloc, ekind){
 	this.ekind = ekind;
 }
 function Id(loc, name){
+	this.etype = "identifier";
 	this.loc = loc;
 	this.name = name;
 }
@@ -110,6 +111,10 @@ function read_cool_class(){
 
 function read_features(){
 	var citem = read();
+	
+	
+//	console.log(citem + " reading this item!");
+	
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
 		var ftype = read_id();
@@ -166,9 +171,14 @@ function read_exp(){
 	else if(citem == "string"){
 		var ival = read();
 		ekind = new String(ival);
-//		console.log("Do the other expressions! " + citem);
 	}
-//	console.log("my exp:" + ekind);
+	else if(citem == "identifier"){
+//		var ival = read();
+//		var iloc = read();
+		ekind = read_id();
+		
+	}
+//	console.log(ekind + "");
 	return new Exp(eloc, ekind);
 }
 
@@ -240,6 +250,10 @@ function output_exp(expression){
 	else if (expression.ekind.etype == "bool"){
 		write(expression.ekind.value  + "\n");
 //		console.log(expression.ekind);	
+	}
+	else if(expression.ekind.etype == "identifier"){
+		write("identifier\n" + expression.ekind.loc + "\n");
+		write(expression.ekind.name + "\n");
 	}
 	else{
 		write("is it here?\n");
