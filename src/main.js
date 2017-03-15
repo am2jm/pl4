@@ -67,7 +67,11 @@ function NewType(etype, item){
 	this.etype = etype;
 	this.value = item;
 }
-
+function SDispatch(etype, eid, argsa){
+	this.etype = etype;
+	this.eid = eid;
+	this.args = argsa;
+}
 //------------SECTION 2: Read File and build AST-------------------------------
 
 function readFile(){
@@ -204,8 +208,16 @@ function read_exp(){
 	else if(citem == "new"){
 		ekind = new NewType(citem, read_id());
 	}
+	else if(citem == "self_dispatch"){
+		sdlist = [];
+		var len = read();
+		for( var i = 0; i < len; i++){
+			sdlist.push(read_exp());
+		}
+		ekind = new SDispatch("self_dispatch", read_id(), sdlist);
+	}
 	else{
-		console.log("Have not done:" + citem + process.argv[2]);
+		console.log("Have not done:" + citem + " " + process.argv[2]);
 	}
 //	console.log(ekind + "");
 	return new Exp(eloc, ekind);
