@@ -92,6 +92,11 @@ function While(etype, econd, ival){
 	this.cond = econd;
 	this.value = ival;
 }
+function Action(myid, mytype, myexp){
+	this.id = myid;
+	this.type = mytype;
+	this.exp = myexpl
+}
 function Case(myexp, actlist){
 	this.etype = "case";
 	this.cond = myexp;
@@ -258,6 +263,19 @@ function read_exp(){
 	}
 	else if(citem == "while"){
 		ekind = new While("while", read_exp(), read_exp());
+	}
+	else if(citem == "case"){
+		actlist = [];
+		var myexp = read_exp();
+		var len = read();
+		
+		for(var i = 0; i < len; i++){
+			var myid = read_id();
+			
+			actlist.push(new Action());
+		}
+		
+		ekind = new Case(myexp, actlist);
 	}
 	else{
 		console.log("Have not done:" + citem + " " + process.argv[2]);
