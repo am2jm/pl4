@@ -81,6 +81,22 @@ function SDispatch(etype, eid, argsa){
 	this.eid = eid;
 	this.args = argsa;
 }
+function If(etype, econd, itrue, ifalse){
+	this.etype = etype;
+	this.cond = econd;
+	this.itrue = itrue;
+	this.ifalse = ifalse;
+}
+function While(etype, econd, ival){
+	this.etype = etype;
+	this.cond = econd;
+	this.value = ival;
+}
+function Case(myexp, actlist){
+	this.etype = "case";
+	this.cond = myexp;
+	this.action = actlist;
+}
 //------------SECTION 2: Read File and build AST-------------------------------
 
 function readFile(){
@@ -237,6 +253,12 @@ function read_exp(){
 		}
 		ekind = new SDispatch("self_dispatch", myid, sdlist);
 	}
+	else if(citem == "if"){
+		ekind = new If("if", read_exp(), read_exp(), read_exp());
+	}
+	else if(citem == "while"){
+		ekind = new While("while", read_exp(), read_exp());
+	}
 	else{
 		console.log("Have not done:" + citem + " " + process.argv[2]);
 	}
@@ -345,8 +367,32 @@ function output_exp(expression){
 			output_exp(expression.ekind.args[q]);
 		}
 	}
-	//
-	//---------- Not here: Block, Assign
+	else if(exptype == "if"){
+		write(exptype + "\n");
+		output_exp(expression.ekind.cond);
+		output_exp(expression.ekind.itrue);
+		output_exp(expression.ekind.ifalse);
+	}
+	else if(exptype == "while"){
+		write(exptype + "\n");
+		output_exp(expression.ekind.cond);
+		output_exp(expression.ekind.value);
+	}
+	else if(exptype == "assign"){
+		write(exptype + "\n");
+		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n");
+		output_exp(expression.ekind.exp);
+	
+	}
+	else if(exptype == "block"){
+		write(exptype + "\n");
+		write(expression.ekind.value.length + "\n");
+		for(var q = 0; q < expression.ekind.value.length; q++){
+			output_exp(expression.ekind.value[q]);
+		}
+	
+	}
+	//---- whoooo didn't catch it
 	else{
 		write("is it here?" + exptype + "\n");
 	}
