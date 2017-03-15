@@ -94,8 +94,8 @@ function While(etype, econd, ival){
 }
 function Action(myid, mytype, myexp){
 	this.id = myid;
-	this.type = mytype;
-	this.exp = myexpl
+	this.atype = mytype;
+	this.exp = myexp;
 }
 function Case(myexp, actlist){
 	this.etype = "case";
@@ -271,8 +271,10 @@ function read_exp(){
 		
 		for(var i = 0; i < len; i++){
 			var myid = read_id();
+			var mytype = read_id();
+			var myexp = read_exp();
 			
-			actlist.push(new Action());
+			actlist.push(new Action(myid, mytype, myexp));
 		}
 		
 		ekind = new Case(myexp, actlist);
@@ -408,7 +410,19 @@ function output_exp(expression){
 		for(var q = 0; q < expression.ekind.value.length; q++){
 			output_exp(expression.ekind.value[q]);
 		}
-	
+	}
+	else if(exptype == "case"){
+		write(exptype + "\n");
+		output_exp(expression.ekind.cond);
+		
+		var len = expression.ekind.action.length;
+		var mylist = expression.ekind.action;
+		write(len + "\n");
+		for(var q = 0; q < len; q++){
+			write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
+			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
+			output_exp(mylist[q].exp);
+		}
 	}
 	//---- whoooo didn't catch it
 	else{
