@@ -102,6 +102,11 @@ function Case(myexp, actlist){
 	this.exp = myexp;
 	this.action = actlist;
 }
+function Let(letlist, inexp){
+	this.etype = "let";
+	this.letlist = letlist;
+	this.inexp = inexp;
+}
 //------------SECTION 2: Read File and build AST-------------------------------
 
 function readFile(){
@@ -279,6 +284,32 @@ function read_exp(){
 		
 		ekind = new Case(cexp, actlist);
 	}
+	else if(citem == "let"){
+		var letlist = [];
+		var len = read();
+		var myid;
+		var mytype;
+		var myexp;
+		
+		for(var i = 0; i < len; i++){
+			var lettype = read();
+			myid = read_id();
+			mytype = read_id();
+			if(lettype == "let_binding_init"){
+				myexp = read_exp();
+			}
+			else if(lettype == "let_binding_no_init"){
+				myexp = "";
+			}
+			else{
+				console.log("This let not possible");
+			}
+			
+			letlist.push(new Action(myid, mytype, myexp));
+		}
+		var inexp = read_exp();
+		ekind = new Let(letlist, inexp);
+	}
 	else{
 		console.log("Have not done:" + citem + " " + process.argv[2]);
 	}
@@ -423,6 +454,26 @@ function output_exp(expression){
 			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
 			output_exp(mylist[q].exp);
 		}
+	}
+	else if(exptype == "let"){
+		write(exptype + "\n");
+		
+		var mylist = expression.ekind.letlist;
+		var len = mylist.length;
+		write(len + "\n");
+		
+		for(var q = 0; q < len; q++){
+			if(mylist[q].exp == ""){
+				write("let_binding_no_init\n");
+			}
+			else{
+				write("let_binding_init\n");
+			}
+			write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
+			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
+		}
+		
+		output_exp(expression.ekind.inexp);
 	}
 	//---- whoooo didn't catch it
 	else{
