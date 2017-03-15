@@ -99,7 +99,7 @@ function Action(myid, mytype, myexp){
 }
 function Case(myexp, actlist){
 	this.etype = "case";
-	this.cond = myexp;
+	this.exp = myexp;
 	this.action = actlist;
 }
 //------------SECTION 2: Read File and build AST-------------------------------
@@ -266,7 +266,7 @@ function read_exp(){
 	}
 	else if(citem == "case"){
 		actlist = [];
-		var myexp = read_exp();
+		var cexp = read_exp();
 		var len = read();
 		
 		for(var i = 0; i < len; i++){
@@ -277,7 +277,7 @@ function read_exp(){
 			actlist.push(new Action(myid, mytype, myexp));
 		}
 		
-		ekind = new Case(myexp, actlist);
+		ekind = new Case(cexp, actlist);
 	}
 	else{
 		console.log("Have not done:" + citem + " " + process.argv[2]);
@@ -413,7 +413,7 @@ function output_exp(expression){
 	}
 	else if(exptype == "case"){
 		write(exptype + "\n");
-		output_exp(expression.ekind.cond);
+		output_exp(expression.ekind.exp);
 		
 		var len = expression.ekind.action.length;
 		var mylist = expression.ekind.action;
