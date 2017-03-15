@@ -67,6 +67,15 @@ function NewType(etype, item){
 	this.etype = etype;
 	this.value = item;
 }
+function Block(etype, evalue){
+	this.etype = etype;
+	this.value = evalue;
+}
+function Assign(etype, eid, exp){
+	this.etype = etype;
+	this.eid = eid;
+	this.exp = exp;
+}
 function SDispatch(etype, eid, argsa){
 	this.etype = etype;
 	this.eid = eid;
@@ -208,13 +217,25 @@ function read_exp(){
 	else if(citem == "new"){
 		ekind = new NewType(citem, read_id());
 	}
+	else if(citem == "block"){
+		var blist = [];
+		var len = read();
+		for( var i = 0; i < len; i++){
+			blist.push(read_exp());
+		}
+		ekind = new Block("block", blist);
+	}
+	else if(citem == "assign"){
+		ekind = new Assign("assign", read_id(), read_exp());
+	}
 	else if(citem == "self_dispatch"){
 		sdlist = [];
+		var myid = read_id();
 		var len = read();
 		for( var i = 0; i < len; i++){
 			sdlist.push(read_exp());
 		}
-		ekind = new SDispatch("self_dispatch", read_id(), sdlist);
+		ekind = new SDispatch("self_dispatch", myid, sdlist);
 	}
 	else{
 		console.log("Have not done:" + citem + " " + process.argv[2]);
@@ -285,36 +306,49 @@ function write(data){
 // A function that will output each expression that can be found, will handle all the types of expressions here
 function output_exp(expression){
 
+	var exptype = expression.ekind.etype;
+	
+	
 	write("" + expression.eloc + "\n");
-	if(check(expression.ekind.etype, ["integer", "string"])){
-		write(expression.ekind.etype + "\n" + expression.ekind.value  + "\n");
+	if(check(exptype, ["integer", "string"])){
+		write(exptype + "\n" + expression.ekind.value  + "\n");
 	}
-	else if (expression.ekind.etype == "not"){
+	else if (exptype == "not"){
 		write("not"  + "\n")
 		output_exp(expression.ekind.value);
 	}
-	else if (expression.ekind.etype == "bool"){
+	else if (exptype == "bool"){
 		write(expression.ekind.value  + "\n");
 	}
-	else if(expression.ekind.etype == "identifier"){
+	else if(exptype == "identifier"){
 		write("identifier\n" + expression.ekind.loc + "\n");
 		write(expression.ekind.name + "\n");
 	}
-	else if(check(expression.ekind.etype, ["lt", "eq", "le", "plus", "minus", "times", "divide"])){
-		write(expression.ekind.etype + "\n");
+	else if(check(exptype, ["lt", "eq", "le", "plus", "minus", "times", "divide"])){
+		write(exptype + "\n");
 		output_exp(expression.ekind.val1);
 		output_exp(expression.ekind.val2);
 	}
-	else if(check(expression.ekind.etype, ["negate", "isvoid"])){
-		write(expression.ekind.etype + "\n");
+	else if(check(exptype, ["negate", "isvoid"])){
+		write(exptype + "\n");
 		output_exp(expression.ekind.value);
 	}
-	else if(expression.ekind.etype == "new"){
-		write(expression.ekind.etype + "\n");
+	else if(exptype == "new"){
+		write(exptype + "\n");
 		write(expression.ekind.value.loc + "\n" + expression.ekind.value.name+ "\n");
 	}
+	else if(exptype == "self_dispatch"){
+		write(exptype + "\n");
+		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n" + expression.ekind.args.length + "\n");
+		
+		for(var q = 0; q < expression.ekind.args.length; q++){
+			output_exp(expression.ekind.args[q]);
+		}
+	}
+	//
+	//---------- Not here: Block, Assign
 	else{
-		write("is it here?\n");
+		write("is it here?" + exptype + "\n");
 	}
 }
 
