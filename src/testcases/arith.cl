@@ -1,7 +1,7 @@
 
 class Main inherits IO {
     x : Int <- 5;
-    y : Int <- value();
+    y : Int <- value(2,3);
    main() : Object {
       {
           y <- x + y;
@@ -9,7 +9,7 @@ class Main inherits IO {
       }
 
 };
-    value() : Int {
+    value(a: Int, b: Int) : Int {
         666
     };
 };
