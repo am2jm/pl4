@@ -118,7 +118,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\n");
+	contents = contents.split("\r\n");
+//	contents = contents.split("\n");
 	contents.pop();
 	return contents;
 }
@@ -201,6 +202,10 @@ function read_formal(){
 
 	// console.log(fname);
 	// console.log(ftype);
+	if(fname.name == "self" || ftype.name == "self"){
+		console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+		process.exit();
+	}
 	return new Formal(fname, ftype);
 }
 
@@ -352,7 +357,7 @@ function check(item, list){
 }
 
 
-//---------- Beginning to actually read the cool program!
+//---------- Beginning to actually read the cool program! 
 readCoolProgram();
 
 
@@ -368,6 +373,7 @@ var all_classes = base_classes.concat(user_classes);
 
 // Check to make sure there is a main class!
 if(user_classes.indexOf("Main") == -1){
+//	console.log(user_classes);
 	console.log("ERROR: 0: Type-Check: no Main class BOI");
 	process.exit();
 }
@@ -567,7 +573,6 @@ for(var i = 0; i < user_classes.length; i++){
 		loners.push(item);
 	}
 }
-// console.log(graph);
 try{
 //	console.dir(tsort(graph));
 	graph = topsort.sortTopo(graph);
@@ -617,7 +622,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 				}
 				else{
 					console.log("ERROR: " + userClasses[indof].features[i].fname.loc + ": Type-Check: attribute is redefineed!" + newF);
-					process.exit();
+					process.exit();				
 				}
 			}
 			else if( userClasses[indof].features[i].fmeth == "Method"){
@@ -636,12 +641,14 @@ for(var ind = 0; ind < graph.length; ind ++){
 			}
 		}
 		if(userClasses[indof].cname.name == "Main"){
-			var mind;
+			var mind = -1;
 			var flag = true;
-
+			
 			for(var i = 0; i < method.length; i++){
+				console.log(method[i]);
 				if(method[i].mname.name == "main"){
-					flag = false;
+//					flag = false;
+//					console.log()
 					mind = i;
 				}
 			}
@@ -649,14 +656,14 @@ for(var ind = 0; ind < graph.length; ind ++){
 				console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
 				process.exit();
 			}
-
-			if(method[mind].formals.length != 0){
+			
+			if(mind != -1 && method[mind].formals.length != 0){
 				console.log("ERROR: 0: Type-Check: main method should have no formals");
 				process.exit();
 			}
-
+			
 		}
-
+//		
 		userClasses[indof].attrib = attrib;
 //		console.log(attrib + " belong to " + userClasses[indof].cname.name);
 
