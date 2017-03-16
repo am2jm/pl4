@@ -16,7 +16,7 @@ module.exports = {
      // #remove edges that do not belong in start_nodes
      if (!checkin(start, start_nodes)){
          start_nodes.push(start);
-        //  console.log(start_nodes);
+          console.log(start_nodes);
        }
      if (!checkin(end, start_nodes)){
        var ind = start_nodes.indexOf(end);
@@ -62,7 +62,7 @@ module.exports = {
 
   // #call topologicalSort
   stack = [];
-  return topologicalSort(start_nodes,stack,x,y, graph.length);
+  return topologicalSort(start_nodes,stack,x,y);
 },
 
 };
@@ -77,43 +77,46 @@ var checkin = function(item, list){
     }
 
 var topologicalSort = function(S, L, x, y) {
-        //loop through the queue until it is empty
-        // console.log("S", S);
-        var cycle = false;
-        if(S.length<=0){
-          cycle= true;
-        }
-        while (S.length>0){
-            S.sort();
-            var node = S[0]
-            // console.log("starting node: ",node);
+	//loop through the queue until it is empty
+	// console.log("S", S);
+	var cycle = false;
+	if(S.length<=0){
+	  cycle= true;
+	}
+	while (S.length>0){
+		S.sort();
+		var node = S[0]
+		// console.log("starting node: ",node);
 
-            //remove it from the queue and add it to the results
-            var index = S.indexOf(node);
-            if(index != -1) {
-    	         S.splice(index, 1);
-             }
-            L.splice(0, 0, node)
-            // console.log("stack", L);
-            if(node in x){
-              x[node].forEach(function(m) {
-                // console.log("for",y[m], "removing dependency", m);
-                // #for each outgoing edges, incoming edge, remove node
-                var index = y[m].indexOf(node);
-                if(index != -1) {
-                y[m].splice(index,1);
-              }
-                //   #if the current outgoing edge no longer has incoming edges, add it to the queue
-                if(y[m].length==0){
-                  delete y[m];
-                  S.push(m);
-                }
-        });
-        delete x[node];
-        }
-    }
+		//remove it from the queue and add it to the results
+		var index = S.indexOf(node);
+		if(index != -1) {
+			 S.splice(index, 1);
+		 }
+		L.splice(0, 0, node)
+		// console.log("stack", L);
+		if(node in x){
+		  x[node].forEach(function(m) {
+			// console.log("for",y[m], "removing dependency", m);
+			// #for each outgoing edges, incoming edge, remove node
+			var index = y[m].indexOf(node);
+			if(index != -1) {
+			y[m].splice(index,1);
+		  }
+			//   #if the current outgoing edge no longer has incoming edges, add it to the queue
+			if(y[m].length==0){
+			  delete y[m];
+			  S.push(m);
+			}
+	});
+	delete x[node];
+	}
+}
         //if there are any edges in the incoming edge graph, there must be a cycle
-        if (y.length> 0 || cycle || L.length != graph.length){
+	
+		var size = Object.keys(y).length;
+//	console.log(size);
+        if (size> 0 || cycle ){
 
             throw "there is a cycle";
           }

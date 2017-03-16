@@ -14,6 +14,11 @@ node main.js ref/"$filename.cl-ast"
 done
 
 
+#filename=""
+#echo "the errors $filename"
+#./cool.exe $i --class-map --out output/$filename
+#./cool.exe $i --parse --out ref/$filename
+#node main.js ref/"$filename.cl-ast"
 
 #filename="sort-list"
 #./cool.exe testcases/"$filename.cl" --class-map --out output/$filename

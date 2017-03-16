@@ -178,7 +178,7 @@ function read_features(){
 		var ftype = read_id();
 		
 		if(fname.name == "self" || ftype.name == "self"){
-			console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+			console.log("ERROR: " + fname.loc + ": Type-Check: attribute named self!!");
 			process.exit();
 		}
 		return new Attribute(fname, ftype, []);
@@ -189,7 +189,7 @@ function read_features(){
 		var finit = read_exp();
 		
 		if(fname.name == "self" || ftype.name == "self"){
-			console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+			console.log("ERROR: " + fname.loc + ": Type-Check: attribute named self!!");
 			process.exit();
 		}
 		return new Attribute(fname, ftype, finit);
@@ -389,7 +389,7 @@ var all_classes = base_classes.concat(user_classes);
 if(user_classes.indexOf("Main") == -1){
 //	console.log(user_classes);
 	console.log("ERROR: 0: Type-Check: no Main class BOI");
-	process.exit();
+//	process.exit();
 }
 for(var x = 0; x < user_classes.length; x++){
 	for(var y = 0; y < user_classes.length; y++){
@@ -642,6 +642,9 @@ for(var ind = 0; ind < graph.length; ind ++){
 			else if( userClasses[indof].features[i].fmeth == "Method"){
 				method.push(userClasses[indof].features[i]);
 				var newF = userClasses[indof].features[i].mname.name;
+				
+				
+				
 				if(methodname.indexOf(newF) == -1){
 					methodname.push(newF);
 				}
@@ -659,7 +662,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 			var flag = true;
 			
 			for(var i = 0; i < method.length; i++){
-				console.log(method[i]);
+//				console.log(method[i]);
 				if(method[i].mname.name == "main"){
 //					flag = false;
 //					console.log()
