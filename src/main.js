@@ -603,7 +603,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 //				console.log("parent: " + list1 + " child: " + list2);
 //				console.log(list1.concat(list2));
 
-				userClasses[indof].attrib = list2.concat(list1);
+				userClasses[indof].attrib = list1.concat(list2);
 			}
 			else
 			{
