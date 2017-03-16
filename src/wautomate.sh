@@ -14,14 +14,14 @@ mkdir output
 
 
 
-filename="test-dstatic"
-./cool.exe testcases/"$filename.cl" --class-map --out output/$filename
-./cool.exe testcases/"$filename.cl" --parse --out ref/$filename
-node main.js ref/"$filename.cl-ast"
-diff output/"$filename.cl-type" ref/"$filename.cl-type" --strip-trailing-cr
-
-#filename="test"
+#filename="test-dstatic"
 #./cool.exe testcases/"$filename.cl" --class-map --out output/$filename
 #./cool.exe testcases/"$filename.cl" --parse --out ref/$filename
 #node main.js ref/"$filename.cl-ast"
 #diff output/"$filename.cl-type" ref/"$filename.cl-type" --strip-trailing-cr
+
+filename="test-ddynamic"
+./cool.exe testcases/"$filename.cl" --class-map --out output/$filename
+./cool.exe testcases/"$filename.cl" --parse --out ref/$filename
+node main.js ref/"$filename.cl-ast"
+diff output/"$filename.cl-type" ref/"$filename.cl-type" --strip-trailing-cr

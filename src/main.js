@@ -535,6 +535,10 @@ for(var i = 0; i < user_classes.length; i++){
 		
 		graph.push([parent, child]);
 	}
+	else{
+		var item = userClasses[indof].cname.name;
+		graph.push([item]);
+	}
 }
 try{
 //	console.dir(tsort(graph));
@@ -559,7 +563,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 //	if(check(all_classes[ind], user_classes)){
 //		var indof = user_classes.indexOf(all_classes[ind]);
 //	console.log(ind + "")
-	
+//	console.log(graph[ind]);
 	if(check(graph[ind], user_classes)){
 		var indof = user_classes.indexOf(graph[ind]);
 		
@@ -581,6 +585,8 @@ for(var ind = 0; ind < graph.length; ind ++){
 			}
 		}
 		userClasses[indof].attrib = attrib;
+//		console.log(attrib + " belong to " + userClasses[indof].cname.name);
+		
 		userClasses[indof].method = method;
 		
 		if(userClasses[indof].inherit != ""){
@@ -594,10 +600,10 @@ for(var ind = 0; ind < graph.length; ind ++){
 				
 				var list1 = userClasses[pind].attrib;
 				var list2 = userClasses[indof].attrib;
-//				console.log("my lists:" + list1 + " and " + list2);
+//				console.log("parent: " + list1 + " child: " + list2);
 //				console.log(list1.concat(list2));
 
-				userClasses[indof].attrib = list1.concat(list2);
+				userClasses[indof].attrib = list2.concat(list1);
 			}
 			else
 			{
@@ -613,9 +619,17 @@ for(var ind = 0; ind < graph.length; ind ++){
 				}
 			
 			}
+			
+		}
+		else{
+//				console.log("I inherit from nothing");
 		}
 //		console.log(userClasses[indof].cname.name + "'s attributes: " + userClasses[indof].attrib);
 //		console.log()
+	}
+	else{
+//		console.log("is the probolem here");
+//		console.log(graph[ind]);
 	}
 }
 
