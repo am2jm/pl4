@@ -139,10 +139,12 @@ function read(){
 //------------SECTION 3: Traverse AST and -------------------------------
 function read_list(worker){
 	var llength = read();
+//	console.log("list length: " + llength);
 	var items = [];
 	for(var i = 0; i < llength; i++){
 		items.push(worker());
 	}
+//	console.log(items);
 	return items;
 }
 function readCoolProgram(){
@@ -169,9 +171,7 @@ function read_cool_class(){
 
 function read_features(){
 	var citem = read();
-
-
-//	console.log(citem + " reading this item!" + process.argv[2]);
+	console.log(citem + " reading this item!" + process.argv[2]);
 
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
@@ -192,13 +192,16 @@ function read_features(){
 		return new Method(mname, formals, mtype, mbody);
 	}
 	else{
-		console.log("invalid! " + citem);
+//		console.log("invalid! " + citem);
 	}
 }
 
 function read_formal(){
 	var fname = read_id();
 	var ftype = read_id();
+	
+	console.log(fname);
+	console.log(ftype);
 	return new Formal(fname, ftype);
 }
 
@@ -646,10 +649,12 @@ for(ind in all_classes){
 		var indof = user_classes.indexOf(all_classes[ind]);
 		
 //		console.log(userClasses[indof].cname.name + " has attrib" + userClasses[indof].attrib);
+		
 		write(userClasses[indof].attrib.length + "\n");
 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
-
-			if( userClasses[indof].attrib[i].initials != ""){
+//			console.log(userClasses[indof].attrib[i]);
+			
+			if( userClasses[indof].attrib[i].finit != ""){
 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
 
 				output_exp(userClasses[indof].attrib[i].finit);

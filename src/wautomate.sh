@@ -14,7 +14,7 @@ done
 
 
 
-#filename="test-dstatic"
+#filename="sort-list"
 #./cool.exe testcases/"$filename.cl" --class-map --out output/$filename
 #./cool.exe testcases/"$filename.cl" --parse --out ref/$filename
 #node main.js ref/"$filename.cl-ast"
