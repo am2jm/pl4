@@ -176,12 +176,22 @@ function read_features(){
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
 		var ftype = read_id();
+		
+		if(fname.name == "self" || ftype.name == "self"){
+			console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+			process.exit();
+		}
 		return new Attribute(fname, ftype, []);
 	}
 	else if(citem == "attribute_init"){
 		var fname = read_id();
 		var ftype = read_id();
 		var finit = read_exp();
+		
+		if(fname.name == "self" || ftype.name == "self"){
+			console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+			process.exit();
+		}
 		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
@@ -204,6 +214,10 @@ function read_formal(){
 	// console.log(ftype);
 	if(fname.name == "self" || ftype.name == "self"){
 		console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+		process.exit();
+	}
+	if(fname.name == "SELF_TYPE" || ftype.name == "SELF_TYPE"){
+		console.log("ERROR: " + fname.loc + ": Type-Check: cannot use SELF_TYPE as a parameter!!");
 		process.exit();
 	}
 	return new Formal(fname, ftype);
