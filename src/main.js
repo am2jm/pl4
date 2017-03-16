@@ -192,7 +192,7 @@ function read_features(){
 		return new Method(mname, formals, mtype, mbody);
 	}
 	else{
-		console.log("invalid!");
+		console.log("invalid! " + citem);
 	}
 }
 
@@ -649,7 +649,7 @@ for(ind in all_classes){
 		write(userClasses[indof].attrib.length + "\n");
 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
 
-			if(attrib[i].initials != ""){
+			if( userClasses[indof].attrib[i].initials != ""){
 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
 
 				output_exp(userClasses[indof].attrib[i].finit);
