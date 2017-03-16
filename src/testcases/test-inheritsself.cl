@@ -5,7 +5,7 @@ class A inherits A{
    value(x : Object) : Object { x };
 
    };
-class B inherits A {
+class B {
 
    avar : Object <- 0;
 

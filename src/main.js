@@ -118,7 +118,7 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\n");
+	contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -363,6 +363,24 @@ var all_classes = base_classes.concat(user_classes);
 //console.log("were all: following user:");
 //console.log(user_classes);
 
+// Check to make sure there is a main class!
+if(user_classes.indexOf("Main") == -1){
+	console.log("ERROR: 0: Type-Check: no Main class BOI");
+	process.exit();
+}
+for(var x = 0; x < user_classes.length; x++){
+	for(var y = 0; y < user_classes.length; y++){
+		if(x != y){
+			if(user_classes[x] == user_classes[y]){
+				// the things gets redefined
+				var index = user_classes.lastIndexOf(user_classes[x]);
+				console.log("ERROR: "+ userClasses[index].cname.loc + ": Type-Check: class got redefinedd!");
+				process.exit();
+			}
+		}
+	}
+}
+
 
 for(var q = 0; q < userClasses.length; q++){
 	// Ensure that we inherit from allowable things
@@ -378,12 +396,12 @@ for(var q = 0; q < userClasses.length; q++){
 
 		if( check(myinherit, ["Int", "String", "Bool"]) ){
 			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: cannot inherit from Integer!");
-			break;
+			process.exit();
 		}
 		else if( !check(myinherit, all_classes) ){
-			console.log(myinherit + " am inheriiting?");
+//			console.log(myinherit + " am inheriiting?");
 			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: inherits from undefined class BOI " + myinherit);
-			break;
+			process.exit();
 		}
 	}
 }
@@ -545,9 +563,10 @@ for(var i = 0; i < user_classes.length; i++){
 try{
 //	console.dir(tsort(graph));
 	graph = topsort.sortTopo(graph);
+	console.log(graph);
 }
 catch (err){
-	console.log(err);
+//	console.log(err);
 	console.log("ERROR: 0: Type-Check: inheritance cycle there be");
 	//-- I errored!
 	// There is a cycle
@@ -589,6 +608,28 @@ for(var ind = 0; ind < graph.length; ind ++){
 				console.log("Neither an attribute or a function");
 			}
 		}
+		if(userClasses[indof].cname.name == "Main"){
+			var mind;
+			var flag = true;
+			
+			for(var i = 0; i < method.length; i++){
+				if(method[i].mname.name == "main"){
+					flag = false;
+					mind = i;
+				}
+			}
+			if(flag){
+				console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
+				process.exit();
+			}
+			
+			if(method[mind].formals.length != 0){
+				console.log("ERROR: 0: Type-Check: main method should have no formals");
+				process.exit();
+			}
+			
+		}
+		
 		userClasses[indof].attrib = attrib;
 //		console.log(attrib + " belong to " + userClasses[indof].cname.name);
 
