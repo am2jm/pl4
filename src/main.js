@@ -341,6 +341,7 @@ function read_exp(){
 	return new Exp(eloc, ekind);
 }
 
+//---------- Helper function often used
 function check(item, list){
 	for (var index = 0; index < list.length; index++){
 		if(item == list[index]){
@@ -350,6 +351,8 @@ function check(item, list){
 	return false;
 }
 
+
+//---------- Beginning to actually read the cool program!
 readCoolProgram();
 
 
@@ -401,6 +404,10 @@ for(var q = 0; q < userClasses.length; q++){
 		else if( !check(myinherit, all_classes) ){
 //			console.log(myinherit + " am inheriiting?");
 			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: inherits from undefined class BOI " + myinherit);
+			process.exit();
+		}
+		else if( myinherit == userClasses[q].cname.name){
+			console.log("ERROR: 0: Type-Check: I inherit from myself! " + myinherit);
 			process.exit();
 		}
 	}
@@ -563,11 +570,12 @@ for(var i = 0; i < user_classes.length; i++){
 try{
 //	console.dir(tsort(graph));
 	graph = topsort.sortTopo(graph);
-	console.log(graph);
+//	console.log(graph);
 }
 catch (err){
 //	console.log(err);
 	console.log("ERROR: 0: Type-Check: inheritance cycle there be");
+	process.exit();
 	//-- I errored!
 	// There is a cycle
 }
@@ -594,15 +602,33 @@ for(var ind = 0; ind < graph.length; ind ++){
 //		console.log(graph[ind] + " checking this has " + indof + " in user clases " + userClasses[indof].cname.name );
 
 		var attrib = [];
+		var attribname = [];
 		var method = [];
+		var methodname = [];
 		var len = userClasses[indof].features.length;
 
 		for(var i = 0; i < len; i++){
 			if (userClasses[indof].features[i].fmeth == "Attribute"){
 				attrib.push(userClasses[indof].features[i]);
+				var newF = userClasses[indof].features[i].fname.name;
+				if(attribname.indexOf(newF) == -1){
+					attribname.push(newF);
+				}
+				else{
+					console.log("ERROR: " + userClasses[indof].features[i].fname.loc + ": Type-Check: attribute is redefineed!" + newF);
+					process.exit();				
+				}
 			}
 			else if( userClasses[indof].features[i].fmeth == "Method"){
 				method.push(userClasses[indof].features[i]);
+				var newF = userClasses[indof].features[i].mname.name;
+				if(methodname.indexOf(newF) == -1){
+					methodname.push(newF);
+				}
+				else{
+					console.log("ERROR: " + userClasses[indof].features[i].mname.loc + ": Type-Check: method was refefined!!" + newF);
+					process.exit();
+				}
 			}
 			else{
 				console.log("Neither an attribute or a function");
