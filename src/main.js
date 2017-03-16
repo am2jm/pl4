@@ -1,6 +1,5 @@
-var tsort = require('topsort');
 fs = require('fs');//, readline = require('readline');
-
+topsort = require("./topsort.js")
 //------------SECTION 1: define types--------------------------------------
 function CoolClass(cname, inhert, features){
 	this.cname = cname;
@@ -119,7 +118,7 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split(/[\r\n]+/);
+	contents = contents.split("\n");
 	contents.pop();
 	return contents;
 }
@@ -171,7 +170,7 @@ function read_cool_class(){
 
 function read_features(){
 	var citem = read();
-	console.log(citem + " reading this item!" + process.argv[2]);
+	// console.log(citem + " reading this item!" + process.argv[2]);
 
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
@@ -199,9 +198,9 @@ function read_features(){
 function read_formal(){
 	var fname = read_id();
 	var ftype = read_id();
-	
-	console.log(fname);
-	console.log(ftype);
+
+	// console.log(fname);
+	// console.log(ftype);
 	return new Formal(fname, ftype);
 }
 
@@ -284,15 +283,15 @@ function read_exp(){
 		actlist = [];
 		var cexp = read_exp();
 		var len = read();
-		
+
 		for(var i = 0; i < len; i++){
 			var myid = read_id();
 			var mytype = read_id();
 			var myexp = read_exp();
-			
+
 			actlist.push(new Action(myid, mytype, myexp));
 		}
-		
+
 		ekind = new Case(cexp, actlist);
 	}
 	else if(citem == "let"){
@@ -301,7 +300,7 @@ function read_exp(){
 		var myid;
 		var mytype;
 		var myexp;
-		
+
 		for(var i = 0; i < len; i++){
 			var lettype = read();
 			myid = read_id();
@@ -315,7 +314,7 @@ function read_exp(){
 			else{
 				console.log("This let not possible");
 			}
-			
+
 			letlist.push(new Action(myid, mytype, myexp));
 		}
 		var inexp = read_exp();
@@ -368,7 +367,7 @@ var all_classes = base_classes.concat(user_classes);
 for(var q = 0; q < userClasses.length; q++){
 	// Ensure that we inherit from allowable things
 	// this is checking all of the user classes
-	
+
 //	console.log(myinherit);
 	if(userClasses[q].inherit == ""){
 		// no inherit
@@ -376,7 +375,7 @@ for(var q = 0; q < userClasses.length; q++){
 	else{
 		var myinherit = userClasses[q].inherit.name;
 //		console.log(userClasses[q]);
-		
+
 		if( check(myinherit, ["Int", "String", "Bool"]) ){
 			console.log("ERROR: " + userClasses[q].inherit.loc + ": Type-Check: cannot inherit from Integer!");
 			break;
@@ -406,8 +405,8 @@ function write(data){
 function output_exp(expression){
 
 	var exptype = expression.ekind.etype;
-	
-	
+
+
 	write("" + expression.eloc + "\n");
 	if(check(exptype, ["integer", "string"])){
 		write(exptype + "\n" + expression.ekind.value  + "\n");
@@ -439,7 +438,7 @@ function output_exp(expression){
 	else if(exptype == "self_dispatch"){
 		write(exptype + "\n");
 		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n" + expression.ekind.args.length + "\n");
-		
+
 		for(var q = 0; q < expression.ekind.args.length; q++){
 			output_exp(expression.ekind.args[q]);
 		}
@@ -459,7 +458,7 @@ function output_exp(expression){
 		write(exptype + "\n");
 		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n");
 		output_exp(expression.ekind.exp);
-	
+
 	}
 	else if(exptype == "block"){
 		write(exptype + "\n");
@@ -471,7 +470,7 @@ function output_exp(expression){
 	else if(exptype == "case"){
 		write(exptype + "\n");
 		output_exp(expression.ekind.exp);
-		
+
 		var len = expression.ekind.action.length;
 		var mylist = expression.ekind.action;
 		write(len + "\n");
@@ -483,11 +482,11 @@ function output_exp(expression){
 	}
 	else if(exptype == "let"){
 		write(exptype + "\n");
-		
+
 		var mylist = expression.ekind.letlist;
 		var len = mylist.length;
 		write(len + "\n");
-		
+
 		for(var q = 0; q < len; q++){
 			if(mylist[q].exp == ""){
 				write("let_binding_no_init\n");
@@ -498,24 +497,24 @@ function output_exp(expression){
 			write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
 			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
 		}
-		
+
 		output_exp(expression.ekind.inexp);
 	}
 	else if(check(exptype, ["static_dispatch", "dynamic_dispatch"])){
 		write(exptype + "\n");
 		output_exp(expression.ekind.exp);
-		
+
 		if(exptype == "static_dispatch"){
 			write(expression.ekind.dtype.loc + "\n" + expression.ekind.dtype.name + "\n");
 		}
 		write(expression.ekind.did.loc + "\n" + expression.ekind.did.name + "\n");
-		
+
 		var mylist = expression.ekind.arglist;
 		var len = mylist.length;
 		write(len + "\n");
 		for(var q = 0; q < len; q++){
 			output_exp(mylist[q]);
-		}	
+		}
 	}
 	//---- whoooo didn't catch it
 	else{
@@ -524,41 +523,44 @@ function output_exp(expression){
 	}
 }
 
-//---------- Need to: inheritance to print all attribs
+// ---------- Need to: inheritance to print all attribs
 
 var graph = [];
-
+var loners = [];
 for(var i = 0; i < user_classes.length; i++){
 	var indof = user_classes.indexOf(user_classes[i]);
-	
+
 	if(userClasses[indof].inherit != ""){
 		var parent = userClasses[indof].inherit.name;
 		var child = userClasses[indof].cname.name;
 //		console.log(child + "'s parent is: " + parent);
-		
+
 		graph.push([parent, child]);
 	}
 	else{
 		var item = userClasses[indof].cname.name;
-		graph.push([item]);
+		loners.push(item);
 	}
 }
 try{
 //	console.dir(tsort(graph));
-	graph = tsort(graph);
+	graph = topsort.sortTopo(graph);
 }
 catch (err){
+	console.log(err);
 	console.log("ERROR: 0: Type-Check: inheritance cycle there be");
 	//-- I errored!
 	// There is a cycle
 }
-//graph.sort();
 
-//---------- Now each class knows its attributs and methods
+graph = graph.concat(loners);
+// console.log(graph);
+
+// ---------- Now each class knows its attributs and methods
 // -- now figure out all the attributes each should hold!
 
 
-//console.log(" length " + graph.length);
+// console.log(" length " + graph.length);
 
 
 
@@ -569,9 +571,9 @@ for(var ind = 0; ind < graph.length; ind ++){
 //	console.log(graph[ind]);
 	if(check(graph[ind], user_classes)){
 		var indof = user_classes.indexOf(graph[ind]);
-		
+
 //		console.log(graph[ind] + " checking this has " + indof + " in user clases " + userClasses[indof].cname.name );
-		
+
 		var attrib = [];
 		var method = [];
 		var len = userClasses[indof].features.length;
@@ -589,18 +591,18 @@ for(var ind = 0; ind < graph.length; ind ++){
 		}
 		userClasses[indof].attrib = attrib;
 //		console.log(attrib + " belong to " + userClasses[indof].cname.name);
-		
+
 		userClasses[indof].method = method;
-		
+
 		if(userClasses[indof].inherit != ""){
 			// I inherit
 			var parent = userClasses[indof].inherit.name;
 			var pind = user_classes.indexOf(parent);
-			
+
 			if( pind != -1 ){
 	//			console.log(userClasses);
 //				console.log(parent + " is the parent with index " + pind + " and attribs " + userClasses[pind].attrib);
-				
+
 				var list1 = userClasses[pind].attrib;
 				var list2 = userClasses[indof].attrib;
 //				console.log("parent: " + list1 + " child: " + list2);
@@ -620,9 +622,9 @@ for(var ind = 0; ind < graph.length; ind ++){
 				{
 					console.log("ERROR: 0: Type-Check: inherits from undeclared?");
 				}
-			
+
 			}
-			
+
 		}
 		else{
 //				console.log("I inherit from nothing");
@@ -647,13 +649,13 @@ for(ind in all_classes){
 
 	if(check(all_classes[ind], user_classes)){
 		var indof = user_classes.indexOf(all_classes[ind]);
-		
+
 //		console.log(userClasses[indof].cname.name + " has attrib" + userClasses[indof].attrib);
-		
+
 		write(userClasses[indof].attrib.length + "\n");
 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
 //			console.log(userClasses[indof].attrib[i]);
-			
+
 			if( userClasses[indof].attrib[i].finit != ""){
 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
 
