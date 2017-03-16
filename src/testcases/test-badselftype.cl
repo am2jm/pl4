@@ -14,8 +14,7 @@ class B inherits A {
    };
 class Main inherits IO {
 	var : Object <- 345;
-	x : Object <- (new B)@A.value(var);
-	y : Object <- 999;
+	y : SELF_TYPE <- 999;
 	a : String <- "divya";
 	main() : Object { 777 };
 	value(z: Object) : Object { z };

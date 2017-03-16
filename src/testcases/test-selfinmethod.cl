@@ -9,7 +9,7 @@ class B inherits A {
 
    avar : Object <- 0;
 
-   value(x : Object) : Object { x };
+   value(self : Int) : Object { x };
 
    };
 class Main inherits IO {

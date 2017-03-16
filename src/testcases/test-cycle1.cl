@@ -1,5 +1,5 @@
-class A {
-     
+class A inherits B{
+
    var : Object <- 0;
 
    value(x : Object) : Object { x };

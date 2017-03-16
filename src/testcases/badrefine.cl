@@ -8,5 +8,6 @@ class Main inherits IO {
       esac;
 	y : Object <- 999;
 	a : String <- "divya";
+	a : Object <- x;
 	main() : Object { 777 };
 };

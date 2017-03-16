@@ -1,6 +1,6 @@
 class A {
-     
-   var : Object <- 0;
+
+   avar : Object <- 0;
 
    value(x : Object) : Object { x };
 

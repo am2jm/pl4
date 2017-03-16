@@ -1,8 +1,8 @@
 class A {
      
    var : Object <- 0;
-
    value(x : Object) : Object { x };
+   value(x : Object, y : Int) : Object { x };
 
    };
 class B inherits A {

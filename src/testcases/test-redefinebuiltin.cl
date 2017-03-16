@@ -1,4 +1,4 @@
-class A {
+class Int {
      
    var : Object <- 0;
 

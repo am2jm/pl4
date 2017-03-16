@@ -1,5 +1,5 @@
 class Main inherits IO {
-	var : SELF_TYPE <- 345;
+	self : Object <- 345;
 	x : Object <-
       case var of
 	 a : Object => 123;
