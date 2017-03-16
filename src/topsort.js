@@ -62,8 +62,9 @@ module.exports = {
 
   // #call topologicalSort
   stack = [];
-  return topologicalSort(start_nodes,stack,x,y);
-}
+  return topologicalSort(start_nodes,stack,x,y, graph.length);
+},
+
 };
 
 var checkin = function(item, list){
@@ -112,8 +113,9 @@ var topologicalSort = function(S, L, x, y) {
         }
     }
         //if there are any edges in the incoming edge graph, there must be a cycle
-        if (y.length> 0 || cycle){
-            return "cycle";
+        if (y.length> 0 || cycle || L.length != graph.length){
+
+            throw "there is a cycle";
           }
         else{
         //else there is a valid solution

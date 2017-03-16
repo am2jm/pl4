@@ -118,7 +118,7 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\r\n");
+	contents = contents.split("\n");
 	contents.pop();
 	return contents;
 }
@@ -567,6 +567,7 @@ for(var i = 0; i < user_classes.length; i++){
 		loners.push(item);
 	}
 }
+// console.log(graph);
 try{
 //	console.dir(tsort(graph));
 	graph = topsort.sortTopo(graph);
@@ -616,7 +617,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 				}
 				else{
 					console.log("ERROR: " + userClasses[indof].features[i].fname.loc + ": Type-Check: attribute is redefineed!" + newF);
-					process.exit();				
+					process.exit();
 				}
 			}
 			else if( userClasses[indof].features[i].fmeth == "Method"){
@@ -637,7 +638,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 		if(userClasses[indof].cname.name == "Main"){
 			var mind;
 			var flag = true;
-			
+
 			for(var i = 0; i < method.length; i++){
 				if(method[i].mname.name == "main"){
 					flag = false;
@@ -648,14 +649,14 @@ for(var ind = 0; ind < graph.length; ind ++){
 				console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
 				process.exit();
 			}
-			
+
 			if(method[mind].formals.length != 0){
 				console.log("ERROR: 0: Type-Check: main method should have no formals");
 				process.exit();
 			}
-			
+
 		}
-		
+
 		userClasses[indof].attrib = attrib;
 //		console.log(attrib + " belong to " + userClasses[indof].cname.name);
 
