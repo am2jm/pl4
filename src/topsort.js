@@ -114,7 +114,7 @@ var topologicalSort = function(S, L, x, y) {
         //if there are any edges in the incoming edge graph, there must be a cycle
         size = Object.keys(y).length;
         if (size> 0 || cycle){
-            throw "there is a cycle";
+            return "cycle";
           }
         else{
         //else there is a valid solution

@@ -118,7 +118,7 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-//	contents = contents.split("\r\n");
+	// contents = contents.split("\r\n");
 	contents = contents.split("\n");
 	contents.pop();
 	return contents;
@@ -176,12 +176,22 @@ function read_features(){
 	if(citem == "attribute_no_init"){
 		var fname = read_id();
 		var ftype = read_id();
+
+		if(fname.name == "self" || ftype.name == "self"){
+			console.log("ERROR: " + fname.loc + ": Type-Check: attribute named self!!");
+			process.exit();
+		}
 		return new Attribute(fname, ftype, []);
 	}
 	else if(citem == "attribute_init"){
 		var fname = read_id();
 		var ftype = read_id();
 		var finit = read_exp();
+
+		if(fname.name == "self" || ftype.name == "self"){
+			console.log("ERROR: " + fname.loc + ": Type-Check: attribute named self!!");
+			process.exit();
+		}
 		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
@@ -204,6 +214,10 @@ function read_formal(){
 	// console.log(ftype);
 	if(fname.name == "self" || ftype.name == "self"){
 		console.log("ERROR: " + fname.loc + ": Type-Check: cannot use self as a parameter!!");
+		process.exit();
+	}
+	if(fname.name == "SELF_TYPE" || ftype.name == "SELF_TYPE"){
+		console.log("ERROR: " + fname.loc + ": Type-Check: cannot use SELF_TYPE as a parameter!!");
 		process.exit();
 	}
 	return new Formal(fname, ftype);
@@ -357,7 +371,7 @@ function check(item, list){
 }
 
 
-//---------- Beginning to actually read the cool program! 
+//---------- Beginning to actually read the cool program!
 readCoolProgram();
 
 
@@ -373,8 +387,9 @@ var all_classes = base_classes.concat(user_classes);
 
 // Check to make sure there is a main class!
 if(user_classes.indexOf("Main") == -1){
+//	console.log(user_classes);
 	console.log("ERROR: 0: Type-Check: no Main class BOI");
-	process.exit();
+//	process.exit();
 }
 for(var x = 0; x < user_classes.length; x++){
 	for(var y = 0; y < user_classes.length; y++){
@@ -575,6 +590,10 @@ for(var i = 0; i < user_classes.length; i++){
 try{
 //	console.dir(tsort(graph));
 	graph = topsort.sortTopo(graph);
+	if(graph== "cycle"){
+		console.log("ERROR: 0: Type-Check: inheritance cycle there be");
+		//process.exit();
+	}
 //	console.log(graph);
 }
 catch (err){
@@ -621,12 +640,15 @@ for(var ind = 0; ind < graph.length; ind ++){
 				}
 				else{
 					console.log("ERROR: " + userClasses[indof].features[i].fname.loc + ": Type-Check: attribute is redefineed!" + newF);
-					process.exit();				
+					process.exit();
 				}
 			}
 			else if( userClasses[indof].features[i].fmeth == "Method"){
 				method.push(userClasses[indof].features[i]);
 				var newF = userClasses[indof].features[i].mname.name;
+
+
+
 				if(methodname.indexOf(newF) == -1){
 					methodname.push(newF);
 				}
@@ -641,26 +663,28 @@ for(var ind = 0; ind < graph.length; ind ++){
 		}
 		if(userClasses[indof].cname.name == "Main"){
 			var mind = -1;
-//			var flag = true;
-			
+			var flag = true;
+
 			for(var i = 0; i < method.length; i++){
+//				console.log(method[i]);
 				if(method[i].mname.name == "main"){
 //					flag = false;
+//					console.log()
 					mind = i;
 				}
 			}
-//			if(flag){
-//				console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
-//				process.exit();
-//			}
-			
+			if(flag){
+				console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
+				// process.exit();
+			}
+
 			if(mind != -1 && method[mind].formals.length != 0){
 				console.log("ERROR: 0: Type-Check: main method should have no formals");
 				process.exit();
 			}
-			
+
 		}
-//		
+//
 		userClasses[indof].attrib = attrib;
 //		console.log(attrib + " belong to " + userClasses[indof].cname.name);
 
