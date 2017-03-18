@@ -703,7 +703,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 				process.exit();
 			}
 			else{
-				console.log("Name, type: " + checktheatt.name + " " + checktype.name);
+				// console.log("Name, type: " + checktheatt.name + " " + checktype.name);
 			}
 			if(checktheatt.name == "SELF_TYPE"){
 				console.log("ERROR: " + checktheatt.loc + ": Type-Check: attribute named SELF_TYPE!!");
@@ -734,7 +734,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 
 				var attinname = [];
 				for(var t = 0; t < userClasses[indof].attrib.length; t++){
-					console.log("I am a user class! " + userClasses[indof].attrib[t].fname.name);
+					// console.log("I am a user class! " + userClasses[indof].attrib[t].fname.name);
 					var checkatt = userClasses[indof].attrib[t].fname.name;
 					if(attinname.indexOf(checkatt) == -1){
 						attinname.push(checkatt);
