@@ -78,6 +78,7 @@ var checkin = function(item, list){
 var topologicalSort = function(S, L, x, y) {
         //loop through the queue until it is empty
         // console.log("S", S);
+        
         var cycle = false;
         if(S.length<=0){
           cycle= true;

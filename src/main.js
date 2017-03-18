@@ -177,10 +177,6 @@ function read_features(){
 		var fname = read_id();
 		var ftype = read_id();
 
-		if(fname.name == "self" || ftype.name == "self"){
-			console.log("ERROR: " + fname.loc + ": Type-Check: attribute named self!!");
-			process.exit();
-		}
 		return new Attribute(fname, ftype, []);
 	}
 	else if(citem == "attribute_init"){
@@ -188,10 +184,6 @@ function read_features(){
 		var ftype = read_id();
 		var finit = read_exp();
 
-		if(fname.name == "self" || ftype.name == "self"){
-			console.log("ERROR: " + fname.loc + ": Type-Check: attribute named self!!");
-			process.exit();
-		}
 		return new Attribute(fname, ftype, finit);
 	}
 	else if(citem == "method"){ // method
@@ -379,6 +371,10 @@ var base_classes = ["Int", "String", "Bool", "IO", "Object"];
 var user_classes = [];
 for (var q = 0; q < userClasses.length; q++) {
 	user_classes.push(userClasses[q].cname.name);
+	if(base_classes.indexOf(user_classes[q]) != -1){
+		console.log("ERROR: "+ userClasses[q].cname.loc +": Type-Check: base class redefined");
+		process.exit();
+	}
 }
 var all_classes = base_classes.concat(user_classes);
 //console.log(all_classes);
@@ -579,7 +575,10 @@ for(var i = 0; i < user_classes.length; i++){
 		var parent = userClasses[indof].inherit.name;
 		var child = userClasses[indof].cname.name;
 //		console.log(child + "'s parent is: " + parent);
-
+		if(parent == "SELF_TYPE" || child == "SELF_TYPE"){
+			console.log("ERROR: "+ userClasses[indof].inherit.loc + ": Type-Check: inheritance cycle there be");
+			process.exit();
+		}
 		graph.push([parent, child]);
 	}
 	else{
@@ -589,11 +588,13 @@ for(var i = 0; i < user_classes.length; i++){
 }
 try{
 //	console.dir(tsort(graph));
+if(graph.length>0){
 	graph = topsort.sortTopo(graph);
 	if(graph== "cycle"){
 		console.log("ERROR: 0: Type-Check: inheritance cycle there be");
-		//process.exit();
+		process.exit();
 	}
+}
 //	console.log(graph);
 }
 catch (err){
@@ -634,9 +635,11 @@ for(var ind = 0; ind < graph.length; ind ++){
 		for(var i = 0; i < len; i++){
 			if (userClasses[indof].features[i].fmeth == "Attribute"){
 				attrib.push(userClasses[indof].features[i]);
+
 				var newF = userClasses[indof].features[i].fname.name;
 				if(attribname.indexOf(newF) == -1){
 					attribname.push(newF);
+					// console.log(newF + " being added :" + attribname.indexOf(newF));
 				}
 				else{
 					console.log("ERROR: " + userClasses[indof].features[i].fname.loc + ": Type-Check: attribute is redefineed!" + newF);
@@ -645,9 +648,16 @@ for(var ind = 0; ind < graph.length; ind ++){
 			}
 			else if( userClasses[indof].features[i].fmeth == "Method"){
 				method.push(userClasses[indof].features[i]);
+
+				var rettype = userClasses[indof].features[i].mtype;
+				if(all_classes.indexOf(rettype.name) == -1){
+					if(rettype.name != "SELF_TYPE"){
+						console.log("ERROR: " + rettype.loc + ": Type-Check: method returns undefined type!!" + rettype.name);
+						process.exit();
+					}
+				}
+
 				var newF = userClasses[indof].features[i].mname.name;
-
-
 
 				if(methodname.indexOf(newF) == -1){
 					methodname.push(newF);
@@ -668,7 +678,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 			for(var i = 0; i < method.length; i++){
 //				console.log(method[i]);
 				if(method[i].mname.name == "main"){
-//					flag = false;
+					flag = false;
 //					console.log()
 					mind = i;
 				}
@@ -683,6 +693,22 @@ for(var ind = 0; ind < graph.length; ind ++){
 				process.exit();
 			}
 
+		}
+
+		for(var mine = 0; mine < attrib.length; mine++){
+			var checktype = attrib[mine].ftype;
+			var checktheatt = attrib[mine].fname;
+			if(checktheatt.name == "self"){
+				console.log("ERROR: " + checktheatt.loc + ": Type-Check: attribute named self!!");
+				process.exit();
+			}
+			else{
+				console.log("Name, type: " + checktheatt.name + " " + checktype.name);
+			}
+			if(checktheatt.name == "SELF_TYPE"){
+				console.log("ERROR: " + checktheatt.loc + ": Type-Check: attribute named SELF_TYPE!!");
+				process.exit();
+			}
 		}
 //
 		userClasses[indof].attrib = attrib;
@@ -705,6 +731,21 @@ for(var ind = 0; ind < graph.length; ind ++){
 //				console.log(list1.concat(list2));
 
 				userClasses[indof].attrib = list1.concat(list2);
+
+				var attinname = [];
+				for(var t = 0; t < userClasses[indof].attrib.length; t++){
+					console.log("I am a user class! " + userClasses[indof].attrib[t].fname.name);
+					var checkatt = userClasses[indof].attrib[t].fname.name;
+					if(attinname.indexOf(checkatt) == -1){
+						attinname.push(checkatt);
+					}
+					else{
+						console.log("ERROR: " + userClasses[indof].attrib[t].fname.loc + ": Type-Check: attribute is redefineed!" + checkatt);
+						process.exit();
+
+					}
+
+				}
 			}
 			else
 			{
