@@ -649,6 +649,20 @@ for(var ind = 0; ind < graph.length; ind ++){
 			else if( userClasses[indof].features[i].fmeth == "Method"){
 				method.push(userClasses[indof].features[i]);
 
+				var uniqueFormal = [];
+				for(var foind = 0;foind < userClasses[indof].features[i].formals.length; foind ++){
+					var myformal = userClasses[indof].features[i].formals[foind];
+					if(uniqueFormal.indexOf(myformal.fname.name) == -1){
+						uniqueFormal.push(myformal.fname.name);
+
+					}
+					else{
+						console.log("ERROR: " + myformal.fname.loc + ": Type-Check: duplicate formals named!! " + myformal.fname.name);
+						process.exit();
+					}
+			  }
+				// console.log(userClasses[indof].features[i].formals);
+
 				var rettype = userClasses[indof].features[i].mtype;
 				if(all_classes.indexOf(rettype.name) == -1){
 					if(rettype.name != "SELF_TYPE"){
@@ -715,6 +729,18 @@ for(var ind = 0; ind < graph.length; ind ++){
 //		console.log(attrib + " belong to " + userClasses[indof].cname.name);
 
 		userClasses[indof].method = method;
+		// uniqueFormal = [];
+		// for(var meind = 0; meind < method.length; meind++){
+		// 	if(uniqueFormal.indexOf(method[meind].mname.name) == -1){
+		// 		uniqueFormal.push(method[meind].mname.name);
+		//
+		// 	}
+		// 	else{
+		// 		console.log("ERROR: " + method[meind].mname.loc + ": Type-Check: duplicate formals named!! " + method[meind].mname.name);
+		// 		process.exit();
+		// 	}
+		//
+		// }
 
 		if(userClasses[indof].inherit != ""){
 			// I inherit
