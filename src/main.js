@@ -726,21 +726,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 		}
 //
 		userClasses[indof].attrib = attrib;
-//		console.log(attrib + " belong to " + userClasses[indof].cname.name);
-
 		userClasses[indof].method = method;
-		// uniqueFormal = [];
-		// for(var meind = 0; meind < method.length; meind++){
-		// 	if(uniqueFormal.indexOf(method[meind].mname.name) == -1){
-		// 		uniqueFormal.push(method[meind].mname.name);
-		//
-		// 	}
-		// 	else{
-		// 		console.log("ERROR: " + method[meind].mname.loc + ": Type-Check: duplicate formals named!! " + method[meind].mname.name);
-		// 		process.exit();
-		// 	}
-		//
-		// }
 
 		if(userClasses[indof].inherit != ""){
 			// I inherit
@@ -753,10 +739,40 @@ for(var ind = 0; ind < graph.length; ind ++){
 
 				var list1 = userClasses[pind].attrib;
 				var list2 = userClasses[indof].attrib;
+
+				var meth1 = userClasses[pind].method; // parent!
+				var meth2 = userClasses[indof].method;
 //				console.log("parent: " + list1 + " child: " + list2);
 //				console.log(list1.concat(list2));
-
 				userClasses[indof].attrib = list1.concat(list2);
+				// add the methods to the child, but Type-Check
+				// while doing so!
+				userClasses[indof].method = [];
+				for(var par = 0; par < meth1.length; par++){
+					for(var kid = 0; kid < meth2.length; kid++){
+						// console.log("checking: " + meth1[par].mname.name + " " + meth2[kid].mname.name);
+
+						if(meth2[kid].mname.name == meth1[par].mname.name){
+							// the child refedines the parent
+							// http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+							if(!arraysEqual(meth2[kid].formals, meth1[par].formals)){
+								console.log("ERROR: " + meth2[kid].mname.loc + ": Type-Check: bad redefined formals!! " + meth2[kid].mname.name);
+								process.exit();
+
+							}
+							if(meth2[kid].mtype.name != meth1[par].mtype.name){
+								console.log("ERROR: " + checktheatt.loc + ": Type-Check: refefines method bad return type!! "+ meth2[kid].mname.name);
+								process.exit();
+							}
+
+						}
+						else{
+							userClasses[indof].method.push(meth1[par]);
+						}
+
+					}
+
+				}
 
 				var attinname = [];
 				for(var t = 0; t < userClasses[indof].attrib.length; t++){
@@ -775,9 +791,88 @@ for(var ind = 0; ind < graph.length; ind ++){
 			}
 			else
 			{
-				// does not exist
+				// I inherit from a does not exist
 				// or is system class
 				if(base_classes.indexOf(parent) != -1 ){
+					if(parent == "IO"){
+						var meth1 = [];
+						var out_string = new Method(new Id(0, "out_string"), [new Formal(
+								new Id(0, "x"), new Id(0, "String"))], new Id(0, "SELF_TYPE"));
+						var out_int = new Method(new Id(0, "out_int"), [new Formal(
+								new Id(0, "x"), new Id(0, "Int"))], new Id(0, "SELF_TYPE"));
+						var in_string = new Method(new Id(0, "in_string"), [], new Id(0, "String"));
+						var in_int = new Method(new Id(0, "in_int"), [], new Id(0, "Int"));
+						meth1.push(out_string);
+						meth1.push(out_int);
+						meth1.push(in_string);
+						meth1.push(in_int);
+
+						var meth2 = userClasses[indof].method;
+						// userClasses[indof].method = [];
+						// console.log(meth1 + "parent");
+						// console.log(meth2 + "child");
+						for(var par = 0; par < meth1.length; par++){
+							for(var kid = 0; kid < meth2.length; kid++){
+								if(meth2[kid].mname.name == meth1[par].mname.name){
+									// the child refedines the parent
+									// http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+									if(!arraysEqual(meth2[kid].formals, meth1[par].formals)){
+										console.log("ERROR: " + meth2[kid].mname.loc + ": Type-Check: bad redefined formals!! " + meth2[kid].mname.name);
+										process.exit();
+
+									}
+									if(meth2[kid].mtype.name != meth1[par].mtype.name){
+										console.log("ERROR: " + checktheatt.loc + ": Type-Check: refefines method bad return type!! "+ meth2[kid].mname.name);
+										process.exit();
+									}
+
+								}
+								else{
+									userClasses[indof].method.push(meth1[par]);
+								}
+
+							}
+
+						}
+					}
+					else if(parent == "Object"){
+						var meth1 = [];
+						var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"));
+		        // console.log(methabort.formals.length + " this is how many formals");
+		        var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"));
+		        var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"));
+		        meth1.push(methabort);
+		        meth1.push(type_name);
+		        meth1.push(copy);
+
+						var meth2 = userClasses[indof].method;
+						// userClasses[indof].method = [];
+						for(var par = 0; par < meth1.length; par++){
+							for(var kid = 0; kid < meth2.length; kid++){
+								if(meth2[kid].mname.name == meth1[par].mname.name){
+									// the child refedines the parent
+									// http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+									if(!arraysEqual(meth2[kid].formals, meth1[par].formals)){
+										console.log("ERROR: " + meth2[kid].mname.loc + ": Type-Check: bad redefined formals!! " + meth2[kid].mname.name);
+										process.exit();
+
+									}
+									if(meth2[kid].mtype.name != meth1[par].mtype.name){
+										console.log("ERROR: " + checktheatt.loc + ": Type-Check: refefines method bad return type!! "+ meth2[kid].mname.name);
+										process.exit();
+									}
+
+								}
+								else{
+									userClasses[indof].method.push(meth1[par]);
+								}
+
+							}
+
+						}
+
+					}
+
 					// do nothing
 					// this is OK
 				}
@@ -791,6 +886,40 @@ for(var ind = 0; ind < graph.length; ind ++){
 		}
 		else{
 //				console.log("I inherit from nothing");
+			var meth1 = [];
+			var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"));
+			// console.log(methabort.formals.length + " this is how many formals");
+			var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"));
+			var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"));
+			meth1.push(methabort);
+			meth1.push(type_name);
+			meth1.push(copy);
+
+			var meth2 = userClasses[indof].method;
+			// userClasses[indof].method = [];
+			for(var par = 0; par < meth1.length; par++){
+				for(var kid = 0; kid < meth2.length; kid++){
+					if(meth2[kid].mname.name == meth1[par].mname.name){
+						// the child refedines the parent
+						// http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+						if(!arraysEqual(meth2[kid].formals, meth1[par].formals)){
+							console.log("ERROR: " + meth2[kid].mname.loc + ": Type-Check: bad redefined formals!! " + meth2[kid].mname.name);
+							process.exit();
+
+						}
+						if(meth2[kid].mtype.name != meth1[par].mtype.name){
+							console.log("ERROR: " + checktheatt.loc + ": Type-Check: refefines method bad return type!! "+ meth2[kid].mname.name);
+							process.exit();
+						}
+
+					}
+					else{
+						userClasses[indof].method.push(meth1[par]);
+					}
+
+				}
+
+			}
 		}
 //		console.log(userClasses[indof].cname.name + "'s attributes: " + userClasses[indof].attrib);
 //		console.log()
@@ -832,4 +961,24 @@ for(ind in all_classes){
 	else{
 		write("0\n");
 	}
+}
+
+function arraysEqual(arr1, arr2) {
+		// array of formals!
+		// console.log(arr1);
+		// console.log(arr2);
+    if(arr1.length != arr2.length){
+        return false;
+			}
+    for(var i = arr1.length; i--;) {
+			// looping through the formals
+        if(arr1[i].fname.name != arr2[i].fname.name){
+            return false;
+					}
+				if(arr1[i].ftype.name != arr2[i].ftype.name){
+		        return false;
+					}
+    }
+
+    return true;
 }
