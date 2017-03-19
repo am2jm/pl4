@@ -371,7 +371,7 @@ var base_classes = ["Int", "String", "Bool", "IO", "Object"];
 var user_classes = [];
 for (var q = 0; q < userClasses.length; q++) {
 	user_classes.push(userClasses[q].cname.name);
-	if(base_classes.indexOf(user_classes[q]) != -1){
+	if(base_classes.indexOf(user_classes[q]) != -1 || user_classes.indexOf("SELF_TYPE") != -1){
 		console.log("ERROR: "+ userClasses[q].cname.loc +": Type-Check: base class redefined");
 		process.exit();
 	}
