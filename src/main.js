@@ -469,6 +469,7 @@ function output_exp(expression){
 		write(expression.ekind.value.loc + "\n" + expression.ekind.value.name+ "\n");
 	}
 	else if(exptype == "self_dispatch"){
+		console.log(expression.ekind, " I think");
 		write(exptype + "\n");
 		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n" + expression.ekind.args.length + "\n");
 
@@ -534,6 +535,7 @@ function output_exp(expression){
 		output_exp(expression.ekind.inexp);
 	}
 	else if(check(exptype, ["static_dispatch", "dynamic_dispatch"])){
+		// console.log(expression.ekind.dtype.name, " I think");
 		write(exptype + "\n");
 		output_exp(expression.ekind.exp);
 
@@ -805,8 +807,8 @@ for(var ind = 0; ind < graph.length; ind ++){
 						meth1.push(out_int);
 						meth1.push(out_string);
 
-						console.log("meth1");
-						console.log(meth1);
+						// console.log("meth1");
+						// console.log(meth1);
 
 						var meth2 = userClasses[indof].method;
 
@@ -823,8 +825,8 @@ for(var ind = 0; ind < graph.length; ind ++){
 										process.exit();
 									}
 
-									console.log("splicing: ");
-									console.log(meth1[par]);
+									// console.log("splicing: ");
+									// console.log(meth1[par]);
 									meth1.splice(par, 1);
 
 								}
@@ -838,7 +840,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 						}
 						var temp = userClasses[indof].method;
 						userClasses[indof].method = meth1.concat(temp);
-						console.log("all functions",userClasses[indof].method, "index", indof);
+						// console.log("all functions",userClasses[indof].method, "index", indof);
 					}
 
 					//check for redefining Object's methods
@@ -924,7 +926,9 @@ for(var ind = 0; ind < graph.length; ind ++){
 //----------------------- SECTION 7: Create File and Begin Recursion
 
 all_classes.sort();
-writeFirst("class_map\n"+ all_classes.length + "\n");
+writeFirst("");
+
+// writeFirst("class_map\n"+ all_classes.length + "\n");
 // var ind = 0;
 // for(ind in all_classes){
 // 	write("" + all_classes[ind] + "\n");
@@ -970,11 +974,12 @@ function baseinheritObject(intype){
 		new Exp(0, new Integer(555)), "String");
 
 		meth1.push(methabort);
-		meth1.push(meconcat);
 		meth1.push(copy);
+		meth1.push(type_name);
+
+		meth1.push(meconcat);
 		meth1.push(melen);
 		meth1.push(mesubs);
-		meth1.push(type_name);
 		// meth1.push();
 	}
 	else if(intype == "IO"){
@@ -1020,28 +1025,35 @@ function baseinheritObject(intype){
 
 write("implementation_map\n"+ all_classes.length + "\n");
 var ind = 0;
+console.log("baseclasses: ",base_classes);
+console.log("all classes: ", all_classes);
+
+
 for(ind in all_classes){
+	console.log("ind", ind);
+
 	write("" + all_classes[ind] + "\n");
 
 	if(check(all_classes[ind], user_classes)){
 		// console.log(userClasses[indof].method);
 		var indof = user_classes.indexOf(all_classes[ind]);
+
 		write(userClasses[indof].method.length + "\n");
+		// Go through all of the methods in a class
 		for(var i = 0; i < userClasses[indof].method.length; i++){
+			// write the method name
+			// write the number of formals and then the actual formal names
 			write(userClasses[indof].method[i].mname.name + "\n");
 			write(userClasses[indof].method[i].formals.length + "\n");
 			for(var q = 0; q < userClasses[indof].method[i].formals.length; q++){
 				write(userClasses[indof].method[i].formals[q].fname.name + "\n");
 			}
-			// 	// write(userClasses[indof].method[i].definition + "."+ userClasses[indof].method[i].mname.name+ "\n");
-			// 	// console.log(userClasses[indof].method[i]);
-			// 	// output_exp(userClasses[indof].method[i].mbody);
-			// }
-
-			if (check(userClasses[indof].method[i].definition, base_classes)!=-1){
+			//Check if this is an internal methid
+			if (check(userClasses[indof].method[i].definition, base_classes)){
 				var internalmeth = userClasses[indof].method[i];
 				// write(internalmeth.mname.name + "\n");
 				// write(internalmeth.formals.length + "\n");
+				console.log("internal: ",userClasses[indof].method[i].definition);
 				write(internalmeth.definition + "\n");
 				write(internalmeth.mbody.eloc + "\n");
 				write(internalmeth.mtype.name + "\n");
@@ -1050,8 +1062,13 @@ for(ind in all_classes){
 
 
 			}
+			// this is not an internal method, so do other stuff
 			else{
-					output_exp(userClasses[indof].method[i].mbody);
+				// console.log(userClasses[indof].method[i]);
+				// write(userClasses[indof].method[i].mtype.name);
+				write(userClasses[indof].cname.name + "\n");
+				output_exp(userClasses[indof].method[i].mbody);
+					//<<do stuff>>
 
 			}
 
@@ -1073,11 +1090,38 @@ for(ind in all_classes){
 		}
 	}
 	else{
-		console.log(all_classes[ind]);
+		// console.log(all_classes[ind]);
 		baseinheritObject(all_classes[ind]);
 				// write("0\n");
 	}
 }
+
+// ------------------ SECTION IDK: Parent map
+// write("parent_map\n"+ (all_classes.length - 1) + "\n");
+// for(ind in all_classes){
+// 	var indof = user_classes.indexOf(all_classes[ind]);
+// 	if(indof == -1){
+// 		// this is a base class
+// 		if(all_classes[ind] != "Object"){
+// 			write(all_classes[ind] + "\n");
+// 			write("Object\n");
+// 		}
+// 	}
+// 	else{
+// 		// this is a user class, it either inherits a thing
+// 		// or it inherits object
+// 		write(all_classes[ind] + "\n");
+// 		if(userClasses[indof].inherit == ""){
+// 			// it inherits nothing
+// 			write("Object\n");
+//
+// 		}
+// 		else{
+// 			write(userClasses[indof].inherit.name +"\n");
+// 		}
+// 	}
+// }
+
 
 //-------------------SECTION 8: Helper Functions
 
