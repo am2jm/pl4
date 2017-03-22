@@ -24,6 +24,7 @@ function Method(mname, formals, mtype, mbody, mdef){
 	this.mtype = mtype;
 	this.mbody = mbody;
 	this.fmeth = "Method";
+	this.rettype = "";
 }
 function Attribute(fname, ftype, initals){
 	this.fname = fname;
@@ -34,62 +35,76 @@ function Attribute(fname, ftype, initals){
 function Formal(fname, ftype){
 	this.fname = fname;
 	this.ftype = ftype;
+	
 }
 function Exp(eloc, ekind){
 	this.eloc = eloc;
 	this.ekind = ekind;
+	this.rettype = "";
 }
 function Id(loc, name){
 	this.etype = "identifier";
 	this.loc = loc;
 	this.name = name;
+	this.rettype = "";
 }
 function Integer(ival){
 	this.etype = "integer";
 	this.value = ival;
+	this.rettype = "Int";
 }
 function Bool(ival){
 	this.etype = "bool";
 	this.value = ival;
+	this.rettype = "Bool";
 }
 function String(ival){
 	this.etype = "string";
 	this.value = ival;
+	this.rettype = "String";
 }
 function Not(ival){
 	this.etype = "not";
 	this.value = ival;
+	this.rettype = "";
 }
 function Comp(mtype, item1, item2){
 	this.etype = mtype;
 	this.val1 = item1;
 	this.val2 = item2;
+	this.rettype = "";
 }
 function Negate(item){
 	this.etype = "negate";
 	this.value = item;
+	this.rettype = "";
 }
 function IsVoid(etype, line){
 	this.etype = etype;
 	this.value = line;
+	this.rettype = "";
 }
 function NewType(etype, item){
 	this.etype = etype;
 	this.value = item;
+	this.rettype = "";
 }
 function Block(etype, evalue){
 	this.etype = etype;
 	this.value = evalue;
+	this.rettype = "";
 }
 function Assign(etype, eid, exp){
 	this.etype = etype;
 	this.eid = eid;
 	this.exp = exp;
+	this.rettype = "";
 }
 function SDispatch(etype, eid, argsa){
 	this.etype = etype;
 	this.eid = eid;
 	this.args = argsa;
+	this.rettype = "";
 }
 function DDispatch(ekind, eexp, etype, eid, args){
 	this.etype = ekind;
@@ -97,32 +112,38 @@ function DDispatch(ekind, eexp, etype, eid, args){
 	this.dtype = etype;
 	this.did = eid;
 	this.arglist = args;
+	this.rettype = "";
 }
 function If(etype, econd, itrue, ifalse){
 	this.etype = etype;
 	this.cond = econd;
 	this.itrue = itrue;
 	this.ifalse = ifalse;
+	this.rettype = "";
 }
 function While(etype, econd, ival){
 	this.etype = etype;
 	this.cond = econd;
 	this.value = ival;
+	this.rettype = "";
 }
 function Action(myid, mytype, myexp){
 	this.id = myid;
 	this.atype = mytype;
 	this.exp = myexp;
+	this.rettype = "";
 }
 function Case(myexp, actlist){
 	this.etype = "case";
 	this.exp = myexp;
 	this.action = actlist;
+	this.rettype = "";
 }
 function Let(letlist, inexp){
 	this.etype = "let";
 	this.letlist = letlist;
 	this.inexp = inexp;
+	this.rettype = "";
 }
 //------------SECTION 2: Read File and build AST-------------------------------
 
@@ -922,6 +943,10 @@ for(var ind = 0; ind < graph.length; ind ++){
 		}
 	}
 }
+// -----------------------SECION >><< DO TYPECHECKING
+// -----------------------HAVE SYMBOL TABLE while do TYPECHECKING
+	// --------------- FIND ERRORS HERE
+
 
 //----------------------- SECTION 7: Create File and Begin Recursion
 
