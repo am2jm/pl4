@@ -20,10 +20,5 @@ main
 3
 Object
 4
-self_dispatch
-4
-out_string
-1
-4
-string
-Hello, world.\n
+integer
+3

@@ -149,7 +149,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\n");
+//	contents = contents.split("\n");
+	contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -196,7 +197,8 @@ function read_cool_class(){
 	else if(citem == "no_inherits"){
 	}
 	else{
-		console.log("nope!");
+		console.log("nope!", citem);
+//		console.log("."+citem+".");
 	}
 
 	var features = read_list(read_features, cname.name);

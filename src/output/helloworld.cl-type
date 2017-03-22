@@ -156,15 +156,9 @@ main
 0
 Main
 4
-SELF_TYPE
-self_dispatch
-4
-out_string
-1
-4
-String
-string
-Hello, world.\n
+Int
+integer
+3
 Object
 3
 abort
