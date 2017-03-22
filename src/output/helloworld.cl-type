@@ -157,8 +157,15 @@ main
 Main
 4
 Int
+times
+4
+Int
 integer
 3
+4
+Int
+integer
+999
 Object
 3
 abort

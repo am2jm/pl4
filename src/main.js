@@ -1,5 +1,15 @@
 fs = require('fs');
 topsort = require("./topsort.js");
+symboltable = require("./symboltable.js");
+
+//var myTable = new symTbl.SymbolTable();
+//
+//myTable.add("4", "5");
+//myTable.add("5", "6");
+//var ind = myTable.find("5");
+//console.log(ind);
+//var ind = myTable.mem("5");
+//console.log(myTable, ind);
 
 //------------SECTION 1: define types--------------------------------------
 
@@ -40,7 +50,7 @@ function Formal(fname, ftype){
 function Exp(eloc, ekind){
 	this.eloc = eloc;
 	this.ekind = ekind;
-	this.rettype = "";
+//	this.rettype = "";
 }
 function Id(loc, name){
 	this.etype = "identifier";
@@ -950,12 +960,154 @@ for(var ind = 0; ind < graph.length; ind ++){
 	// --------------- FIND ERRORS HERE
 
 
+
+function tcheckExp(mytbl, expre){
+	// return a boolean t/f
+	var expid = expre.ekind.etype;
+	switch(expid){
+		case "integer":
+			expre.rettype = "Int";
+			break;
+		case "string":
+			expre.rettype = "String";
+			break;
+		case "bool":
+			expre.rettype = "Bool";
+			break;
+		case "minus":
+		case "times":
+		case "divide":
+		case "plus":
+			var val1 = tcheckExp(mytbl, expre.ekind.val1);
+			var val2 = tcheckExp(mytbl, expre.ekind.val2);
+			if(val1.rettype == "Int" && val2.rettype == "Int"){
+				console.log("I am plus");
+				expre.ekind.rettype = "Int";
+			}
+			else{
+				console.log("** THis should be an ERROR **");
+			}
+			expre.ekind.val1 = val1;
+			expre.ekind.val2 = val2;
+			break;
+		case "le":
+		case "lt":
+		case "eq":
+			var val1 = tcheckExp(mytbl, expre.ekind.val1);
+			var val2 = tcheckExp(mytbl, expre.ekind.val2);
+			if(val1.rettype == "Bool" && val2.rettype == "Bool"){
+				console.log("I am plus");
+				expre.ekind.rettype = "Bool";
+			}
+			else{
+				console.log("** THis should be an ERROR **");
+			}
+			expre.ekind.val1 = val1;
+			expre.ekind.val2 = val2;
+			break;
+		case "isvoid":
+			expre.ekind.rettype = "Bool";
+			break;
+		case "negate":
+			var inside = tcheckExp(mytbl, expre.ekind.value);
+			if(inside.rettype != "Int"){
+				console.log("** This is an ERROR");
+			}
+			expre.ekind.rettype = "Int";
+			break;
+		case "not":
+			var inside = tcheckExp(mytbl, expre.ekind.value);
+			if(inside.rettype != "Bool"){
+				console.log("** This is an ERROR");
+			}
+			expre.ekind.rettype = "Bool";
+			break;
+		case "new":
+		case "assign":
+		case "identifer":
+		case "if":
+		case "while":
+		case "block":
+		case "case":
+		case "let":
+		case "self_dispatch":
+		case "dynamic_dispatch":
+		case "static_dispatch":
+		default:
+			console.log("hi sanity check");
+			expre.rettype = "Hello"
+			
+	
+	}
+	console.log(expre);
+	return expre;
+}
+function tcheckMeth(mytbl, mymeth){
+	var methName = mymeth.mname.name;
+	var methBody = mymeth.mbody;
+	var supposedRet = mymeth.mtype.name;
+	
+	mytbl.add("Method", methName);
+	
+	//TODO:
+	
+	// * push on the method formals
+	// * so that the thingy on the inside can touch them!
+	
+	mymeth.mbody = tcheckExp(mytbl, methBody);
+//	console.log(mytbl.print());
+	mytbl.remove("Method");
+//	console.log(mymeth);
+	
+	if(mymeth != rettype){
+		console.log("||---------Taihendesune");
+	}
+	return true;
+}
+function tcheckClass(mytbl, mclass){
+	// I am given a symbol table, and a user-class
+	var className = mclass.cname.name;
+	mytbl.add("Class", className);
+	//TODO:
+	
+	// * should probablly push on all of the attributes that belong to the class
+	// * idk as how tho, just the list? probably
+	// * so that methods can call them OK
+	
+	for(var i = 0; i < mclass.method.length; i++){
+	
+		var checkMe = tcheckMeth(mytbl, mclass.method[i]);
+	}
+	
+	console.log(mytbl.print());
+	
+	mytbl.remove(className);
+	return checkMe;
+}
+all_classes.sort();
+var symTbl = new symboltable.SymbolTable();
+
+for(ind in all_classes){
+
+	if(check(all_classes[ind], user_classes)){
+		var indof = user_classes.indexOf(all_classes[ind]);
+		
+		// pass in my symTbl! Should be nothing in it!
+		var tcheckIt = tcheckClass(symTbl, userClasses[indof]);
+		if(tcheckIt != ""){
+			// print an error
+		}
+	}
+}
+
+
 //----------------------- SECTION 7: Create File and Begin Recursion
 
-all_classes.sort();
+//all_classes.sort();
+// move this over some
 writeFirst("");
 
-// writeFirst("class_map\n"+ all_classes.length + "\n");
+// write("class_map\n"+ all_classes.length + "\n");
 // var ind = 0;
 // for(ind in all_classes){
 // 	write("" + all_classes[ind] + "\n");
@@ -1052,12 +1204,12 @@ function baseinheritObject(intype){
 
 write("implementation_map\n"+ all_classes.length + "\n");
 var ind = 0;
-console.log("baseclasses: ",base_classes);
-console.log("all classes: ", all_classes);
+//console.log("baseclasses: ",base_classes);
+//console.log("all classes: ", all_classes);
 
 
 for(ind in all_classes){
-	console.log("ind", ind);
+//	console.log("ind", ind);
 
 	write("" + all_classes[ind] + "\n");
 
@@ -1080,7 +1232,7 @@ for(ind in all_classes){
 				var internalmeth = userClasses[indof].method[i];
 				// write(internalmeth.mname.name + "\n");
 				// write(internalmeth.formals.length + "\n");
-				console.log("internal: ",userClasses[indof].method[i].definition);
+//				console.log("internal: ",userClasses[indof].method[i].definition);
 				write(internalmeth.definition + "\n");
 				write(internalmeth.mbody.eloc + "\n");
 				write(internalmeth.mtype.name + "\n");
@@ -1182,6 +1334,7 @@ function arraysEqual(arr1, arr2) {
 
 //check if an item is in a list
 function check(item, list){
+//	console.log(item, list);
 	for (var index = 0; index < list.length; index++){
 		if(item == list[index]){
 			return true;

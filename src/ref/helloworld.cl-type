@@ -156,8 +156,13 @@ main
 0
 Main
 4
+times
+4
 integer
 3
+4
+integer
+999
 Object
 3
 abort

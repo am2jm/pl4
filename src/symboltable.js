@@ -62,7 +62,7 @@ exports.SymbolTable = function() {
      * Returns whether x is bound in the table.
      */
     this.mem = function(x) {
-        return x in Object.keys(table);
+        return x in table;
     };
     
     /*
@@ -74,4 +74,8 @@ exports.SymbolTable = function() {
             table[x].pop();
         }
     };
+	
+	this.print = function(x){
+		return table;
+	}
 }
