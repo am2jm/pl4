@@ -960,8 +960,12 @@ for(var ind = 0; ind < graph.length; ind ++){
 	// --------------- FIND ERRORS HERE
 
 
+// TODO: fix methods, need to have the t0, tn-1 <- formals
+// and tn = return type
 
-function tcheckExp(mytbl, expre){
+// Javascript, im passing objects
+// passing by REFERENCE
+function tcheckExp(expre, classname, objsym, metsym){
 	// return a boolean t/f
 	var expid = expre.ekind.etype;
 	switch(expid){
@@ -1039,10 +1043,10 @@ function tcheckExp(mytbl, expre){
 			
 	
 	}
-	console.log(expre);
-	return expre;
+//	console.log(expre);
+//	return expre;
 }
-function tcheckMeth(mytbl, mymeth){
+function tcheckMeth(mymeth, classname, objsym, metsym){
 	var methName = mymeth.mname.name;
 	var methBody = mymeth.mbody;
 	var supposedRet = mymeth.mtype.name;
@@ -1064,28 +1068,113 @@ function tcheckMeth(mytbl, mymeth){
 	}
 	return true;
 }
-function tcheckClass(mytbl, mclass){
+
+function tcheckAtt(myatt, classname, objsym, metsym){
+	var aname = myatt.fname.name;
+	
+	if(myatt.finit.length < 1){
+		console.log(myatt);
+		// whoo no typechecking to do!
+	}
+	else{
+//		console.log(myatt.finit);
+		tcheckExp(myatt.finit);
+		
+		var bodytype = myatt.finit.ekind.rettype;
+		
+		if( bodytype == objsym.find(classname).find(aname)){
+			console.log("ok!!!");
+		}
+		else{
+			console.log("nokay!!!!");
+		}
+		
+	}
+}
+function tcheckClass(mclass, classname, objsym, metsym){
 	// I am given a symbol table, and a user-class
 	var className = mclass.cname.name;
-	mytbl.add("Class", className);
 	//TODO:
-	
-	// * should probablly push on all of the attributes that belong to the class
-	// * idk as how tho, just the list? probably
-	// * so that methods can call them OK
+	// attributes next
 	
 	for(var i = 0; i < mclass.method.length; i++){
 	
-		var checkMe = tcheckMeth(mytbl, mclass.method[i]);
+//		var checkMe = tcheckMeth(mytbl, mclass.method[i]);
+	}
+	for(var i = 0; i < mclass.attrib.length; i++){
+	
+		var checkMe = tcheckAtt(mclass.attrib[i], classname, objsym, metsym);
 	}
 	
-	console.log(mytbl.print());
-	
-	mytbl.remove(className);
-	return checkMe;
+//	return checkMe;
 }
+
 all_classes.sort();
-var symTbl = new symboltable.SymbolTable();
+
+var osym = new symboltable.SymbolTable();
+var msym = new symboltable.SymbolTable();
+
+for(ind in all_classes){
+	var clname = all_classes[ind];
+	if(user_classes.indexOf(clname) != -1){
+		// this is a user class
+		var indof = user_classes.indexOf(clname);
+		var myClass = userClasses[indof];
+		
+//		console.log(myClass);
+
+		osym.add(clname, new symboltable.SymbolTable());
+		msym.add(clname, new symboltable.SymbolTable());
+		
+		
+		for(var i = 0; i < myClass.attrib.length; i++){
+			osym.find(clname).add(myClass.attrib[i].fname.name, myClass.attrib[i].ftype.name);
+		}
+		for(var i = 0; i < myClass.method.length; i++){
+			msym.find(clname).add(myClass.method[i].mname.name, myClass.method[i].mtype.name);
+		}
+//		console.log(osym.find(clname).print(), clname);
+//		console.log(msym.find(clname).print(), clname);
+	
+	}
+	else{
+		// this is a basic class
+		osym.add(clname, new symboltable.SymbolTable());
+		msym.add(clname, new symboltable.SymbolTable());
+		
+		// your mom gets object		
+		msym.find(clname).add("abort", "Object");
+		msym.find(clname).add("copy", "SELF_TYPE");
+		msym.find(clname).add("type_name", "String");
+
+		
+		if(clname == "String"){
+			msym.find(clname).add("length", "Int");
+			msym.find(clname).add("concat", "String");
+			msym.find(clname).add("substr", "String");
+		}
+		else if(check(clname, ["Int", "Bool"])){
+			// just get all of object's stuff?
+		}
+		else if (clname == "IO"){
+			
+			msym.find(clname).add("out_string", "SELF_TYPE");
+			msym.find(clname).add("out_int", "SELF_TYPE");
+			msym.find(clname).add("in_string", "String");
+			msym.find(clname).add("in_int", "Int");
+			
+		}
+		else{
+//			console.log(clname);
+		}
+//		console.log(msym.find(clname).print(), clname);	
+	}
+	
+}
+
+
+//console.log(msym.print());
+
 
 for(ind in all_classes){
 
@@ -1093,9 +1182,9 @@ for(ind in all_classes){
 		var indof = user_classes.indexOf(all_classes[ind]);
 		
 		// pass in my symTbl! Should be nothing in it!
-		var tcheckIt = tcheckClass(symTbl, userClasses[indof]);
+		var tcheckIt = tcheckClass(userClasses[indof], user_classes[indof], osym, msym);
 		if(tcheckIt != ""){
-			// print an error
+			// print an error, maybe?
 		}
 	}
 }
@@ -1107,28 +1196,28 @@ for(ind in all_classes){
 // move this over some
 writeFirst("");
 
-// write("class_map\n"+ all_classes.length + "\n");
-// var ind = 0;
-// for(ind in all_classes){
-// 	write("" + all_classes[ind] + "\n");
-// 	if(check(all_classes[ind], user_classes)){
-// 		var indof = user_classes.indexOf(all_classes[ind]);
-// 		write(userClasses[indof].attrib.length + "\n");
-// 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
-//
-// 			if( userClasses[indof].attrib[i].finit != ""){
-// 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
-// 				output_exp(userClasses[indof].attrib[i].finit);
-// 			}
-// 			else{
-// 				write("no_initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
-// 			}
-// 		}
-// 	}
-// 	else{
-// 		write("0\n");
-// 	}
-// }
+ write("class_map\n"+ all_classes.length + "\n");
+ var ind = 0;
+ for(ind in all_classes){
+ 	write("" + all_classes[ind] + "\n");
+ 	if(check(all_classes[ind], user_classes)){
+ 		var indof = user_classes.indexOf(all_classes[ind]);
+ 		write(userClasses[indof].attrib.length + "\n");
+ 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
+
+ 			if( userClasses[indof].attrib[i].finit != ""){
+ 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
+ 				output_exp(userClasses[indof].attrib[i].finit);
+ 			}
+ 			else{
+ 				write("no_initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
+ 			}
+ 		}
+ 	}
+ 	else{
+ 		write("0\n");
+ 	}
+ }
 
 // --------------------- finish the class mapping
 // --------------------- commented out to test imp map
@@ -1276,30 +1365,30 @@ for(ind in all_classes){
 }
 
 // ------------------ SECTION IDK: Parent map
-// write("parent_map\n"+ (all_classes.length - 1) + "\n");
-// for(ind in all_classes){
-// 	var indof = user_classes.indexOf(all_classes[ind]);
-// 	if(indof == -1){
-// 		// this is a base class
-// 		if(all_classes[ind] != "Object"){
-// 			write(all_classes[ind] + "\n");
-// 			write("Object\n");
-// 		}
-// 	}
-// 	else{
-// 		// this is a user class, it either inherits a thing
-// 		// or it inherits object
-// 		write(all_classes[ind] + "\n");
-// 		if(userClasses[indof].inherit == ""){
-// 			// it inherits nothing
-// 			write("Object\n");
-//
-// 		}
-// 		else{
-// 			write(userClasses[indof].inherit.name +"\n");
-// 		}
-// 	}
-// }
+ write("parent_map\n"+ (all_classes.length - 1) + "\n");
+ for(ind in all_classes){
+ 	var indof = user_classes.indexOf(all_classes[ind]);
+ 	if(indof == -1){
+ 		// this is a base class
+ 		if(all_classes[ind] != "Object"){
+ 			write(all_classes[ind] + "\n");
+ 			write("Object\n");
+ 		}
+ 	}
+ 	else{
+ 		// this is a user class, it either inherits a thing
+ 		// or it inherits object
+ 		write(all_classes[ind] + "\n");
+ 		if(userClasses[indof].inherit == ""){
+ 			// it inherits nothing
+ 			write("Object\n");
+
+ 		}
+ 		else{
+ 			write(userClasses[indof].inherit.name +"\n");
+ 		}
+ 	}
+ }
 
 
 //-------------------SECTION 8: Helper Functions
