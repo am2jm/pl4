@@ -45,7 +45,7 @@ function Attribute(fname, ftype, initals){
 function Formal(fname, ftype){
 	this.fname = fname;
 	this.ftype = ftype;
-	
+
 }
 function Exp(eloc, ekind){
 	this.eloc = eloc;
@@ -159,8 +159,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-//	contents = contents.split("\n");
-	contents = contents.split("\r\n");
+	contents = contents.split("\n");
+	// contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -1028,7 +1028,13 @@ function tcheckExp(expre, classname, objsym, metsym){
 			break;
 		case "new":
 		case "assign":
+
+		//TODO: still need new and assign
 		case "identifer":
+			// expre.rettype = "String";
+			if(objsym.find(classname).find(expre.ekind.name)==expre.ekind.name){
+				expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
+			}
 		case "if":
 		case "while":
 		case "block":
@@ -1040,8 +1046,8 @@ function tcheckExp(expre, classname, objsym, metsym){
 		default:
 			console.log("hi sanity check");
 			expre.rettype = "Hello"
-			
-	
+
+
 	}
 //	console.log(expre);
 //	return expre;
@@ -1050,19 +1056,19 @@ function tcheckMeth(mymeth, classname, objsym, metsym){
 	var methName = mymeth.mname.name;
 	var methBody = mymeth.mbody;
 	var supposedRet = mymeth.mtype.name;
-	
+
 	mytbl.add("Method", methName);
-	
+
 	//TODO:
-	
+
 	// * push on the method formals
 	// * so that the thingy on the inside can touch them!
-	
+
 	mymeth.mbody = tcheckExp(mytbl, methBody);
 //	console.log(mytbl.print());
 	mytbl.remove("Method");
 //	console.log(mymeth);
-	
+
 	if(mymeth != rettype){
 		console.log("||---------Taihendesune");
 	}
@@ -1071,7 +1077,7 @@ function tcheckMeth(mymeth, classname, objsym, metsym){
 
 function tcheckAtt(myatt, classname, objsym, metsym){
 	var aname = myatt.fname.name;
-	
+
 	if(myatt.finit.length < 1){
 		console.log(myatt);
 		// whoo no typechecking to do!
@@ -1079,16 +1085,16 @@ function tcheckAtt(myatt, classname, objsym, metsym){
 	else{
 //		console.log(myatt.finit);
 		tcheckExp(myatt.finit);
-		
+
 		var bodytype = myatt.finit.ekind.rettype;
-		
+
 		if( bodytype == objsym.find(classname).find(aname)){
 			console.log("ok!!!");
 		}
 		else{
 			console.log("nokay!!!!");
 		}
-		
+
 	}
 }
 function tcheckClass(mclass, classname, objsym, metsym){
@@ -1096,16 +1102,16 @@ function tcheckClass(mclass, classname, objsym, metsym){
 	var className = mclass.cname.name;
 	//TODO:
 	// attributes next
-	
+
 	for(var i = 0; i < mclass.method.length; i++){
-	
+
 //		var checkMe = tcheckMeth(mytbl, mclass.method[i]);
 	}
 	for(var i = 0; i < mclass.attrib.length; i++){
-	
+
 		var checkMe = tcheckAtt(mclass.attrib[i], classname, objsym, metsym);
 	}
-	
+
 //	return checkMe;
 }
 
@@ -1120,13 +1126,13 @@ for(ind in all_classes){
 		// this is a user class
 		var indof = user_classes.indexOf(clname);
 		var myClass = userClasses[indof];
-		
+
 //		console.log(myClass);
 
 		osym.add(clname, new symboltable.SymbolTable());
 		msym.add(clname, new symboltable.SymbolTable());
-		
-		
+
+
 		for(var i = 0; i < myClass.attrib.length; i++){
 			osym.find(clname).add(myClass.attrib[i].fname.name, myClass.attrib[i].ftype.name);
 		}
@@ -1135,19 +1141,19 @@ for(ind in all_classes){
 		}
 //		console.log(osym.find(clname).print(), clname);
 //		console.log(msym.find(clname).print(), clname);
-	
+
 	}
 	else{
 		// this is a basic class
 		osym.add(clname, new symboltable.SymbolTable());
 		msym.add(clname, new symboltable.SymbolTable());
-		
-		// your mom gets object		
+
+		// your mom gets object
 		msym.find(clname).add("abort", "Object");
 		msym.find(clname).add("copy", "SELF_TYPE");
 		msym.find(clname).add("type_name", "String");
 
-		
+
 		if(clname == "String"){
 			msym.find(clname).add("length", "Int");
 			msym.find(clname).add("concat", "String");
@@ -1157,19 +1163,19 @@ for(ind in all_classes){
 			// just get all of object's stuff?
 		}
 		else if (clname == "IO"){
-			
+
 			msym.find(clname).add("out_string", "SELF_TYPE");
 			msym.find(clname).add("out_int", "SELF_TYPE");
 			msym.find(clname).add("in_string", "String");
 			msym.find(clname).add("in_int", "Int");
-			
+
 		}
 		else{
 //			console.log(clname);
 		}
-//		console.log(msym.find(clname).print(), clname);	
+//		console.log(msym.find(clname).print(), clname);
 	}
-	
+
 }
 
 
@@ -1180,7 +1186,7 @@ for(ind in all_classes){
 
 	if(check(all_classes[ind], user_classes)){
 		var indof = user_classes.indexOf(all_classes[ind]);
-		
+
 		// pass in my symTbl! Should be nothing in it!
 		var tcheckIt = tcheckClass(userClasses[indof], user_classes[indof], osym, msym);
 		if(tcheckIt != ""){
