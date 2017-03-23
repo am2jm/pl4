@@ -965,6 +965,29 @@ for(var ind = 0; ind < graph.length; ind ++){
 
 // Javascript, im passing objects
 // passing by REFERENCE
+
+// take in two class names
+function checkInherit(parent, child){
+	if(user_classes.indexOf(child) != -1 ){
+			var childsparent = userClasses[user_classes.indexOf(child)].inherits;
+
+			if(childsparent == ""){
+				return parent == "Object" || parent == child;
+			}
+			else if(parent == childsparent){
+				return true;
+			}
+			else{
+				return checkInherit(parent, childsparent);
+			}
+
+	}
+	else{
+		// the child is a base classs
+		return parent == "Object" || parent == child;
+	}
+}
+
 function tcheckExp(expre, classname, objsym, metsym){
 	// return a boolean t/f
 	var expid = expre.ekind.etype;
@@ -982,14 +1005,15 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "times":
 		case "divide":
 		case "plus":
-			var val1 = tcheckExp(mytbl, expre.ekind.val1);
-			var val2 = tcheckExp(mytbl, expre.ekind.val2);
+			var val1 = tcheckExp(expre.ekind.val1, classname, objsym, metsym);
+			var val2 = tcheckExp(expre.ekind.val2, classname, objsym, metsym);
 			if(val1.rettype == "Int" && val2.rettype == "Int"){
 				console.log("I am plus");
 				expre.ekind.rettype = "Int";
 			}
 			else{
-				console.log("** THis should be an ERROR **");
+				console.log("ERROR: "+ expre.eloc+ ": Type-Check: arithmetic failed typchecking");
+				process.exit();
 			}
 			expre.ekind.val1 = val1;
 			expre.ekind.val2 = val2;
@@ -997,44 +1021,71 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "le":
 		case "lt":
 		case "eq":
-			var val1 = tcheckExp(mytbl, expre.ekind.val1);
-			var val2 = tcheckExp(mytbl, expre.ekind.val2);
-			if(val1.rettype == "Bool" && val2.rettype == "Bool"){
+			tcheckExp(expre.ekind.val1, classname, objsym, metsym);
+			tcheckExp(expre.ekind.val2, classname, objsym, metsym);
+
+			// console.log()
+			if(check(expre.ekind.val1.rettype, ["Int", "String", "Bool"]) || check(expre.ekind.val2.rettype, ["Int", "String", "Bool"]))
+			 	if(expre.ekind.val1.rettype == expre.ekind.val2.rettype){
 				console.log("I am plus");
 				expre.ekind.rettype = "Bool";
 			}
 			else{
-				console.log("** THis should be an ERROR **");
+				console.log("ERROR: "+ expre.eloc+ ": Type-Check: equals failed typchecking");
+				process.exit();
 			}
-			expre.ekind.val1 = val1;
-			expre.ekind.val2 = val2;
 			break;
 		case "isvoid":
 			expre.ekind.rettype = "Bool";
 			break;
 		case "negate":
-			var inside = tcheckExp(mytbl, expre.ekind.value);
+			var inside = tcheckExp(expre.ekind.value, classname, objsym, metsym);
 			if(inside.rettype != "Int"){
-				console.log("** This is an ERROR");
+				console.log("ERROR: "+ expre.eloc+ ": Type-Check: negate failed typchecking");
+				process.exit();
 			}
 			expre.ekind.rettype = "Int";
 			break;
 		case "not":
-			var inside = tcheckExp(mytbl, expre.ekind.value);
+			var inside = tcheckExp(expre.ekind.value, classname, objsym, metsym);
 			if(inside.rettype != "Bool"){
-				console.log("** This is an ERROR");
+				console.log("ERROR: "+ expre.eloc+ ": Type-Check: not failed typchecking");
+				process.exit();
 			}
 			expre.ekind.rettype = "Bool";
 			break;
 		case "new":
+		//TODO: Do new
 		case "assign":
-
+			var maxtype = objsym.find(classname).find(expre.ekind.eid.name);
+			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
+			var mytype = expre.ekind.rettype;
+			if(maxtype == mytype){
+				// this is OK
+				expre.ekind.rettype = mytype;
+			}
+			else{
+				if(checkInherit(maxtype, mytype)){
+					expre.ekind.rettype = mytype;
+					console.log(mytype, "the inheritance was ok");
+				}
+				else{
+					console.log("ERROR: "+ expre.eloc+ ": Type-Check: assign is taihen checking failed typchecking");
+					process.exit();
+				}
+			}
+			break;
 		//TODO: still need new and assign
 		case "identifer":
 			// expre.rettype = "String";
 			if(objsym.find(classname).find(expre.ekind.name)==expre.ekind.name){
 				expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
 			}
+			else{
+				console.log("ERROR: "+ expre.eloc+ ": Type-Check: ideintifier checking failed typchecking");
+				process.exit();
+			}
+			break;
 		case "if":
 		case "while":
 		case "block":
@@ -1089,10 +1140,11 @@ function tcheckAtt(myatt, classname, objsym, metsym){
 		var bodytype = myatt.finit.ekind.rettype;
 
 		if( bodytype == objsym.find(classname).find(aname)){
-			console.log("ok!!!");
+			console.log("ok!!!", objsym.find(classname).find(aname));
 		}
 		else{
-			console.log("nokay!!!!");
+			console.log("ERROR: "+ myatt.finit.eloc+ ": Type-Check: i!!!!", bodytype, objsym.find(classname).find(aname));
+			process.exit();
 		}
 
 	}
