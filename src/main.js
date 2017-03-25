@@ -41,6 +41,7 @@ function Attribute(fname, ftype, initals){
 	this.ftype = ftype;
 	this.finit = initals;
 	this.fmeth = "Attribute";
+	this.rettype = "";
 }
 function Formal(fname, ftype){
 	this.fname = fname;
@@ -159,8 +160,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\n");
-	// contents = contents.split("\r\n");
+//	contents = contents.split("\n");
+	contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -824,7 +825,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 						var out_string = new Method(new Id(0, "out_string"), [new Formal(
 								new Id(0, "x"), new Id(0, "String"))], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)), "IO");
 						var out_int = new Method(new Id(0, "out_int"), [new Formal(
-								new Id(0, "x"), new Id(0, "Int"))], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)), "IO");
+								new Id(0, "x"), new Id(0, "Int"))], new Id(0, "SELF_TYPE"), new Exp(0, new Id(0, "self")), "IO");
 						var in_string = new Method(new Id(0, "in_string"), [], new Id(0, "String"), new Exp(0, new Integer(555)), "IO");
 						var in_int = new Method(new Id(0, "in_int"), [], new Id(0, "Int"), new Exp(0, new Integer(555)), "IO");
 						var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"), new Exp(0, new Integer(555)), "Object");
@@ -993,22 +994,22 @@ function tcheckExp(expre, classname, objsym, metsym){
 	var expid = expre.ekind.etype;
 	switch(expid){
 		case "integer":
-			expre.rettype = "Int";
+			expre.ekind.rettype = "Int";
 			break;
 		case "string":
-			expre.rettype = "String";
+			expre.ekind.rettype = "String";
 			break;
 		case "bool":
-			expre.rettype = "Bool";
+			expre.ekind.rettype = "Bool";
 			break;
 		case "minus":
 		case "times":
 		case "divide":
 		case "plus":
-			var val1 = tcheckExp(expre.ekind.val1, classname, objsym, metsym);
-			var val2 = tcheckExp(expre.ekind.val2, classname, objsym, metsym);
-			if(val1.rettype == "Int" && val2.rettype == "Int"){
-				console.log("I am plus");
+			tcheckExp(expre.ekind.val1, classname, objsym, metsym);
+			tcheckExp(expre.ekind.val2, classname, objsym, metsym);
+			if(expre.ekind.val1.ekind.rettype == "Int" && expre.ekind.val2.ekind.rettype == "Int"){
+//				console.log("I am plus");
 				expre.ekind.rettype = "Int";
 			}
 			else{
@@ -1025,37 +1026,50 @@ function tcheckExp(expre, classname, objsym, metsym){
 			tcheckExp(expre.ekind.val2, classname, objsym, metsym);
 
 			// console.log()
-			if(check(expre.ekind.val1.rettype, ["Int", "String", "Bool"]) || check(expre.ekind.val2.rettype, ["Int", "String", "Bool"]))
-			 	if(expre.ekind.val1.rettype == expre.ekind.val2.rettype){
-				console.log("I am plus");
+			if(check(expre.ekind.val1.ekind.rettype, ["Int", "String", "Bool"]) || check(expre.ekind.val2.ekind.rettype, ["Int", "String", "Bool"]))
+			 	if(expre.ekind.val1.ekind.rettype == expre.ekind.val2.ekind.rettype){
 				expre.ekind.rettype = "Bool";
+//				console.log("Set rettype to bool");
 			}
 			else{
 				console.log("ERROR: "+ expre.eloc+ ": Type-Check: equals failed typchecking");
 				process.exit();
 			}
+//			console.log("did a thing!", expre.ekind.rettype);
 			break;
 		case "isvoid":
+			tcheckExp(expre.ekind.value, classname, objsym, metsym);
 			expre.ekind.rettype = "Bool";
 			break;
 		case "negate":
-			var inside = tcheckExp(expre.ekind.value, classname, objsym, metsym);
-			if(inside.rettype != "Int"){
-				console.log("ERROR: "+ expre.eloc+ ": Type-Check: negate failed typchecking");
+			tcheckExp(expre.ekind.value, classname, objsym, metsym);
+			if(expre.ekind.value.ekind.rettype != "Int"){
+				console.log("ERROR: "+ expre.ekind.value.eloc+ ": Type-Check: negate failed typchecking");
 				process.exit();
 			}
 			expre.ekind.rettype = "Int";
 			break;
 		case "not":
-			var inside = tcheckExp(expre.ekind.value, classname, objsym, metsym);
-			if(inside.rettype != "Bool"){
-				console.log("ERROR: "+ expre.eloc+ ": Type-Check: not failed typchecking");
+			tcheckExp(expre.ekind.value, classname, objsym, metsym);
+			if(expre.ekind.value.ekind.rettype != "Bool"){
+				console.log("ERROR: "+ expre.ekind.value.eloc+ ": Type-Check: not failed typchecking");
 				process.exit();
 			}
 			expre.ekind.rettype = "Bool";
 			break;
 		case "new":
+			var mytype = expre.ekind.value.name;
+			// This should be the new "Type"
+			if( mytype == "SELF_TYPE"){
+				expre.ekind.rettype = "SELF_TYPE";
+				//TODO: SELF_TYPE STUFFFF
+				// ^^^^
+			}
+			else{
+				expre.ekind.rettype = mytype;
+			}
 		//TODO: Do new
+			break;
 		case "assign":
 			var maxtype = objsym.find(classname).find(expre.ekind.eid.name);
 			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
@@ -1075,8 +1089,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 				}
 			}
 			break;
-		//TODO: still need new and assign
-		case "identifer":
+	case "identifer":
 			// expre.rettype = "String";
 			if(objsym.find(classname).find(expre.ekind.name)==expre.ekind.name){
 				expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
@@ -1087,16 +1100,115 @@ function tcheckExp(expre, classname, objsym, metsym){
 			}
 			break;
 		case "if":
-		case "while":
+			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
+			tcheckExp(expre.ekind.itrue, classname, objsym, metsym);
+			tcheckExp(expre.ekind.ifalse, classname, objsym, metsym);
+			
+			var condi = expre.ekind.cond.ekind.rettype;
+			var t2 = expre.ekind.itrue.ekind.rettype;
+			var t3 = expre.ekind.ifalse.ekind.rettype;
+			
+			if(condi != "Bool"){
+				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
+				process.exit();
+			}
+			// TODO: FINISH IF
+			// ^^^^
+			break;		
 		case "block":
+			var last_type = "";
+			for(var q = 0; q < expre.ekind.value.length; q++){
+				tcheckExp(expre.ekind.value[q], classname, objsym, metsym);
+				last_type = expre.ekind.value[q].ekind.rettype;
+//				console.log(last_type);
+			}
+			expre.ekind.rettype = last_type;
+			break;
+		case "while":
+			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
+			tcheckExp(expre.ekind.value, classname, objsym, metsym);
+			
+			var condi = expre.ekind.cond.ekind.rettype;
+//			var t2 = expre.ekind.value.ekind.rettype;
+			if(condi != "Bool"){
+				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: while condition not Booleantype");
+				process.exit();
+			}
+			expre.ekind.rettype = "Object";
+			break;
 		case "case":
-		case "let":
-		case "self_dispatch":
+			var types = [];
+			for(var q = 0; q < expre.ekind.action.length; q++){
+				tcheckExp(expre.ekind.action[q], classname, objsym, metsym);
+				types.push(expre.ekind.action[q].rettype);
+				console.log(types);
+			}
+			// TODO: LIKE IF, ⊔ items together
+			// ^^^^
+			break;
 		case "dynamic_dispatch":
+			// type is undefined or null, because it's not static!!
+			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
+			var t0 = expre.ekind.exp.ekind.rettype;
+			var theMethod;
+			if(t0 == "SELF_TYPE"){
+				theMethod = metsym.find(classname).find(expre.ekind.did.name);
+			}
+			else{
+				theMethod = metsym.find(t0).find(expre.ekind.did.name);
+			}
+//			console.log(theMethod);
+			var finalOne = theMethod.pop();
+			
+			if(expre.ekind.arglist.length == theMethod.length){
+				for(var q = 0; q < theMethod.length; q++){
+					if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
+						// it is false!!
+						console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error bad formals!!");
+						process.exit();
+					}
+				}
+			}
+			else{
+				console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error yo");
+				process.exit();
+			}
+			// SO FAR OK!!! 
+			if(finalOne == "SELF_TYPE"){
+				expre.ekind.rettype = t0;
+			}
+			else{
+				expre.ekind.rettype = finalOne;
+			}
+//			console.log("whoooo", expre.ekind.rettype);
+			break;
+		case "self_dispatch":
+			var theMethod = metsym.find(classname).find(expre.ekind.did.name);
+			var finalOne = theMethod.pop();
+			
+			if(expre.ekind.arglist.length == theMethod.length){
+				for(var q = 0; q < theMethod.length; q++){
+					if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
+						// it is false!!
+						console.log("ERROR: " + expre.eloc+ ": Type-Check: self dispatch error bad formals!!");
+						process.exit();
+					}
+				}
+			}
+			else{
+				console.log("ERROR: " + expre.eloc+ ": Type-Check: self dispatch error yo");
+				process.exit();
+			}
+			// SO FAR OK!!! 
+			expre.ekind.rettype = finalOne;
+			break;
+		case "let":
+			break;
 		case "static_dispatch":
+			break;
 		default:
-			console.log("hi sanity check");
-			expre.rettype = "Hello"
+			console.log("hi sanity check, I am impossible", expid);
+			expre.rettype = "DIVYA DON'T COMMENT ME OUT";
 
 
 	}
@@ -1104,46 +1216,37 @@ function tcheckExp(expre, classname, objsym, metsym){
 //	return expre;
 }
 function tcheckMeth(mymeth, classname, objsym, metsym){
-	var methName = mymeth.mname.name;
-	var methBody = mymeth.mbody;
 	var supposedRet = mymeth.mtype.name;
 
-	mytbl.add("Method", methName);
-
-	//TODO:
-
-	// * push on the method formals
-	// * so that the thingy on the inside can touch them!
-
-	mymeth.mbody = tcheckExp(mytbl, methBody);
-//	console.log(mytbl.print());
-	mytbl.remove("Method");
-//	console.log(mymeth);
-
-	if(mymeth != rettype){
-		console.log("||---------Taihendesune");
+	tcheckExp(mymeth.mbody, classname, objsym, metsym);
+	var actualRet = mymeth.mbody.ekind.rettype;
+	
+	if(!checkInherit(supposedRet, actualRet)){
+		console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
+		console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
 	}
 	return true;
 }
-
 function tcheckAtt(myatt, classname, objsym, metsym){
 	var aname = myatt.fname.name;
 
 	if(myatt.finit.length < 1){
-		console.log(myatt);
+//		console.log(myatt);
+		myatt.rettype = objsym.find(classname).find(myatt.fname.name);
 		// whoo no typechecking to do!
 	}
 	else{
 //		console.log(myatt.finit);
-		tcheckExp(myatt.finit);
+		tcheckExp(myatt.finit, classname, objsym, metsym);
 
 		var bodytype = myatt.finit.ekind.rettype;
-
-		if( bodytype == objsym.find(classname).find(aname)){
+//		console.log(myatt.finit);
+		
+		if(checkInherit(objsym.find(classname).find(aname), bodytype)){
 			console.log("ok!!!", objsym.find(classname).find(aname));
 		}
 		else{
-			console.log("ERROR: "+ myatt.finit.eloc+ ": Type-Check: i!!!!", bodytype, objsym.find(classname).find(aname));
+			console.log("ERROR: "+ myatt.finit.eloc+ ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
 			process.exit();
 		}
 
@@ -1157,11 +1260,11 @@ function tcheckClass(mclass, classname, objsym, metsym){
 
 	for(var i = 0; i < mclass.method.length; i++){
 
-//		var checkMe = tcheckMeth(mytbl, mclass.method[i]);
+		tcheckMeth(mclass.method[i], classname, objsym, metsym);
 	}
 	for(var i = 0; i < mclass.attrib.length; i++){
 
-		var checkMe = tcheckAtt(mclass.attrib[i], classname, objsym, metsym);
+		tcheckAtt(mclass.attrib[i], classname, objsym, metsym);
 	}
 
 //	return checkMe;
@@ -1189,7 +1292,12 @@ for(ind in all_classes){
 			osym.find(clname).add(myClass.attrib[i].fname.name, myClass.attrib[i].ftype.name);
 		}
 		for(var i = 0; i < myClass.method.length; i++){
-			msym.find(clname).add(myClass.method[i].mname.name, myClass.method[i].mtype.name);
+			var methformals = [];
+			for(var q = 0; q < myClass.method[i].formals.length; q++){
+				methformals.push(myClass.method[i].formals[q].ftype.name);
+			}
+			methformals.push(myClass.method[i].mtype.name);
+			msym.find(clname).add(myClass.method[i].mname.name, methformals);
 		}
 //		console.log(osym.find(clname).print(), clname);
 //		console.log(msym.find(clname).print(), clname);
@@ -1201,25 +1309,25 @@ for(ind in all_classes){
 		msym.add(clname, new symboltable.SymbolTable());
 
 		// your mom gets object
-		msym.find(clname).add("abort", "Object");
-		msym.find(clname).add("copy", "SELF_TYPE");
-		msym.find(clname).add("type_name", "String");
+		msym.find(clname).add("abort", ["Object"]);
+		msym.find(clname).add("copy", ["SELF_TYPE"]);
+		msym.find(clname).add("type_name", ["String"]);
 
 
 		if(clname == "String"){
-			msym.find(clname).add("length", "Int");
-			msym.find(clname).add("concat", "String");
-			msym.find(clname).add("substr", "String");
+			msym.find(clname).add("length", ["Int"]);
+			msym.find(clname).add("concat", ["String", "String"]);
+			msym.find(clname).add("substr", ["Int", "Int", "String"]);
 		}
 		else if(check(clname, ["Int", "Bool"])){
 			// just get all of object's stuff?
 		}
 		else if (clname == "IO"){
 
-			msym.find(clname).add("out_string", "SELF_TYPE");
-			msym.find(clname).add("out_int", "SELF_TYPE");
-			msym.find(clname).add("in_string", "String");
-			msym.find(clname).add("in_int", "Int");
+			msym.find(clname).add("out_string", ["String", "SELF_TYPE"]);
+			msym.find(clname).add("out_int", ["Int", "SELF_TYPE"]);
+			msym.find(clname).add("in_string", ["String"]);
+			msym.find(clname).add("in_int", ["Int"]);
 
 		}
 		else{
@@ -1240,10 +1348,10 @@ for(ind in all_classes){
 		var indof = user_classes.indexOf(all_classes[ind]);
 
 		// pass in my symTbl! Should be nothing in it!
-		var tcheckIt = tcheckClass(userClasses[indof], user_classes[indof], osym, msym);
-		if(tcheckIt != ""){
-			// print an error, maybe?
-		}
+		tcheckClass(userClasses[indof], user_classes[indof], osym, msym);
+//		if(tcheckIt != ""){
+//			// print an error, maybe?
+//		}
 	}
 }
 

@@ -155,12 +155,12 @@ IO.out_string
 main
 0
 Main
-6
+5
 String
 assign
-6
+5
 at_att_no
-6
+5
 String
 string
 hello
