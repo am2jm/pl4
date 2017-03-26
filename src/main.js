@@ -296,6 +296,7 @@ function read_exp(){
 	//location, expression information, expression type
 	var eloc = read();
 	var ekind = "";
+
 	var citem = read();
 
 //sets expression information
@@ -639,7 +640,7 @@ for(var i = 0; i < user_classes.length; i++){
 
 //topologically sort the graph
 
-
+// var edges = graph;
 //catch errors
 if(graph.length>0){
 	graph = topsort.sortTopo(graph);
@@ -999,6 +1000,8 @@ function checkInherit(parent, child){
 function tcheckExp(expre, classname, objsym, metsym){
 	// return a boolean t/f
 	var expid = expre.ekind.etype;
+	// console.log(expid, "doing a big case");
+	// console.log(expre.ekind);
 	switch(expid){
 		case "integer":
 			expre.ekind.rettype = "Int";
@@ -1126,8 +1129,11 @@ function tcheckExp(expre, classname, objsym, metsym){
 				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
 				process.exit();
 			}
-			// TODO: FINISH IF
-			// ^^^^
+
+			var lCA = leastCommonAncestor(t2, t3);
+			console.log(lCA, " from the if statement");
+			expre.ekind.rettype = lCA;
+
 			break;
 		case "block":
 			var last_type = "";
@@ -1153,12 +1159,17 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "case":
 			var types = [];
 			for(var q = 0; q < expre.ekind.action.length; q++){
-				tcheckExp(expre.ekind.action[q], classname, objsym, metsym);
-				types.push(expre.ekind.action[q].rettype);
-				console.log(types);
+				tcheckExp(expre.ekind.action[q].exp, classname, objsym, metsym);
+				types.push(expre.ekind.action[q].exp.ekind.rettype);
+				// console.log(types);
 			}
-			// TODO: LIKE IF, ⊔ items together
-			// ^^^^
+			// have a list of types
+			var basecase = leastCommonAncestor(types[0], types[1]);
+			for (var i =1; i< types.length; i++){
+				basecase= leastCommonAncestor(basecase, types[i]);
+			}
+			// console.log(basecase);
+			expre.ekind.rettype = basecase;
 			break;
 		case "dynamic_dispatch":
 			// type is undefined or null, because it's not static!!
@@ -1640,4 +1651,41 @@ function check(item, list){
 		}
 	}
 	return false;
+}
+
+function inheritList(classname, listsofar){
+	var indof = user_classes.indexOf(classname);
+
+	listsofar.unshift(classname);
+	if(indof == -1){
+		listsofar.unshift("Object");
+		return listsofar;
+	}
+	else{
+		var parent = userClasses[indof].inherit;
+		if(parent == ""){
+			listsofar.unshift("Object");
+			return listsofar;
+		}
+		else{
+			// console.log(parent.name);
+			return inheritList(parent.name, listsofar);
+		}
+	}
+}
+
+function leastCommonAncestor(t1, t2){
+	var l1 = inheritList(t1, []);
+	var l2 = inheritList(t2, []);
+
+	l1 = l1.reverse();
+	l2 = l2.reverse();
+	for(var i = 0; i < l1.length; i++){
+		for(var j = 0; j < l2.length; j++){
+			if(l1[i] == l2[j]){
+				// console.log(l1[i]);
+				return l1[i];
+			}
+		}
+	}
 }
