@@ -51,7 +51,7 @@ exports.SymbolTable = function() {
      * no such binding exists.
      */
     this.find = function(x) {
-        if(Object.keys(table).indexOf(x) > -1 && (table[x].length > 0)) {
+        if(Object.keys(table).indexOf(x) > -1) {
             return table[x][table[x].length-1];
         } else {
             // throw "not found";

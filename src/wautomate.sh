@@ -7,10 +7,10 @@ do
 bn=$(basename $i)
 filename="${bn%%.*}"
 echo "file: $filename"
-./cool.exe $i --imp-map --out output/$filename
+./cool.exe $i --type --out output/$filename
 ./cool.exe $i --parse --out ref/$filename
 node main.js ref/"$filename.cl-ast"
-#diff output/"$filename.cl-type" ref/"$filename.cl-type" --strip-trailing-cr
+diff output/"$filename.cl-type" ref/"$filename.cl-type" --strip-trailing-cr
 done
 
 
