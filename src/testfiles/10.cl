@@ -1,62 +1,62 @@
 
 
-class Foo inherits Bazz { 
-a : Razz <- case self of 
-n : Razz => ( new Bar ) ; 
-n : Foo => ( new Razz ) ; 
-n : Bar => n ; 
-esac ; 
+class Foo inherits Bazz {
+a : Razz <- case self of
+n : Razz => ( new Bar ) ;
+n : Foo => ( new Razz ) ;
+n : Bar => n ;
+esac ;
 
-b : Int <- a . doh ( ) + g . doh ( ) + doh ( ) + printh ( ) ; 
+b : Int <- a . doh ( ) + g . doh ( ) + doh ( ) + printh ( ) ;
 
-doh ( ) : Int { ( let i : Razz <- h in { h <- h + 2 ; i ; } ) } ; 
+doh ( ) : Int { ( let i : Razz <- h in { h <- h + 2 ; i ; } ) } ;
 
-} ; 
+} ;
 
-class Bar inherits Razz { 
+class Bar inherits Razz {
 
-c : Int <- doh ( ) ; 
+c : Int <- doh ( ) ;
 
-d : Object <- printh ( ) ; 
-} ; 
+d : Object <- printh ( ) ;
+} ;
 
 
-class Razz inherits Foo { 
+class Razz inherits Foo {
 
-e : Bar <- case self of 
-n : Razz => ( new Bar ) ; 
-n : Bar => n ; 
-esac ; 
+e : Bar <- case self of
+n : Razz => ( new Bar ) ;
+n : Bar => n ;
+esac ;
 
-f : Int <- a @ Bazz . doh ( ) + g . doh ( ) + e . doh ( ) + doh ( ) + printh ( ) ; 
+f : Int <- a @ Bazz . doh ( ) + g . doh ( ) + e . doh ( ) + doh ( ) + printh ( ) ;
 
-} ; 
+} ;
 
 class Bazz inherits IO { 
 
-h : Int <- 1 ; 
+h : Int <- 1 ;
 
-g : Foo <- case self of 
-n : Bazz => ( new Foo ) ; 
-n : Razz => ( new Bar ) ; 
-n : Foo => ( new Razz ) ; 
-n : Bar => n ; 
-esac ; 
+g : Foo <- case self of
+n : Bazz => ( new Foo ) ;
+n : Razz => ( new Bar ) ;
+n : Foo => ( new Razz ) ;
+n : Bar => n ;
+esac ;
 
-i : Object <- printh ( ) ; 
+i : Object <- printh ( ) ;
 
-printh ( ) : Int { { out_int ( h ) ; 0 ; } } ; 
+printh ( ) : Int { { out_int ( h ) ; 0 ; } } ;
 
-doh ( ) : Int { ( let i : Int <- h in { h <- h + 1 ; i ; } ) } ; 
-} ; 
+doh ( ) : Int { ( let i : Int <- h in { h <- h + 1 ; i ; } ) } ;
+} ;
 
 
-class Main inherits IO { 
-a : Bazz <- new Bazz ; 
-b : Foo <- new Foo ; 
-c : Int <- new Razz ; 
-d : Bar <- new Bar ; 
+class Main inherits IO {
+a : Bazz <- new Bazz ;
+b : Foo <- new Foo ;
+c : Int <- new Razz ;
+d : Bar <- new Bar ;
 
-main ( ) : String { { out_string ( "\n" ) ; "do nothing" ; } } ; 
+main ( ) : String { { out_string ( "\n" ) ; "do nothing" ; } } ;
 
-} ; 
+} ;

@@ -2,7 +2,7 @@ rm -rf ref/
 rm -rf output/
 mkdir ref
 mkdir output
-for i in temp_test/*.cl
+for i in testfiles/*.cl
 do
 bn=$(basename $i)
 filename="${bn%%.*}"
