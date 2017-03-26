@@ -181,8 +181,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-	contents = contents.split("\n");
-//	 contents = contents.split("\r\n");
+//	contents = contents.split("\n");
+	 contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -447,7 +447,6 @@ for (var q = 0; q < userClasses.length; q++) {
 
 //combine all classes
 var all_classes = base_classes.concat(user_classes);
-
 // Check to make sure there is a main class!
 if(user_classes.indexOf("Main") == -1){
 	console.log("ERROR: 0: Type-Check: no Main class BOI");
