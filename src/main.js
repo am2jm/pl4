@@ -195,8 +195,15 @@ var identifiers = [];
 var fname = process.argv[2].slice(0, -4);
 fname += "-type";
 
+
+if(myAST.indexOf("main")==-1){
+	console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
+	process.exit();
+}
+
+
 //helper function to consume input from the ast
-function read(){
+function read(ast){
 	var item = myAST[myindex];
 	myindex++;
 	return item;
@@ -731,7 +738,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 			}
 			if(flag){
 				console.log("ERROR: 0: Type-Check: no main method in Main class BOI");
-				// process.exit();
+				process.exit();
 			}
 
 			if(mind != -1 && method[mind].formals.length != 0){
@@ -978,16 +985,17 @@ for(var ind = 0; ind < graph.length; ind ++){
 // take in two class names
 function checkInherit(parent, child){
 	if(user_classes.indexOf(child) != -1 ){
-			var childsparent = userClasses[user_classes.indexOf(child)].inherits;
+			var childsparent = userClasses[user_classes.indexOf(child)].inherit;
+
 
 			if(childsparent == ""){
 				return parent == "Object" || parent == child;
 			}
-			else if(parent == childsparent){
+			else if(parent == childsparent.name){
 				return true;
 			}
 			else{
-				return checkInherit(parent, childsparent);
+				return checkInherit(parent, childsparent.name);
 			}
 
 	}
@@ -1018,16 +1026,17 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "plus":
 			tcheckExp(expre.ekind.val1, classname, objsym, metsym);
 			tcheckExp(expre.ekind.val2, classname, objsym, metsym);
+			// console.log("e1",expre.ekind.val1.ekind);
+			// console.log("e2",expre.ekind.val2.ekind);
+
 			if(expre.ekind.val1.ekind.rettype == "Int" && expre.ekind.val2.ekind.rettype == "Int"){
 //				console.log("I am plus");
 				expre.ekind.rettype = "Int";
 			}
 			else{
-				console.log("ERROR: "+ expre.eloc+ ": Type-Check: arithmetic failed typchecking");
+				console.log("ERROR: "+ expre.eloc+ ": Type-Check: arithmetic failed typchecking - yo");
 				process.exit();
 			}
-			expre.ekind.val1 = val1;
-			expre.ekind.val2 = val2;
 			break;
 		case "le":
 		case "lt":
@@ -1083,7 +1092,9 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "assign":
 			var maxtype = objsym.find(classname).find(expre.ekind.eid.name);
 			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
-			var mytype = expre.ekind.rettype;
+			var mytype = expre.ekind.exp.ekind.rettype;
+			// console.log("ekind: ", expre.ekind.exp
+
 			if(maxtype == mytype){
 				// this is OK
 				expre.ekind.rettype = mytype;
@@ -1094,6 +1105,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 					console.log(mytype, "the inheritance was ok");
 				}
 				else{
+					// console.log(maxtype, ":parent, child:", mytype);
 					console.log("ERROR: "+ expre.eloc+ ": Type-Check: assign is taihen checking failed typchecking");
 					process.exit();
 				}
@@ -1107,7 +1119,17 @@ function tcheckExp(expre, classname, objsym, metsym){
 			}
 			// console.log(objsym.find(classname).find(expre.ekind.name));
 			// console.log(expre.ekind.name);
-			if(objsym.find(classname).find(expre.ekind.name) != "I didn't find anything master"){
+
+			// if(objsym.find(classname).find(expre.ekind.name)=="" || objsym.find(classname).find(expre.ekind.name)=='undefined'){
+			// 	console.log("ERROR: "+ expre.eloc+ ": Type-Check: ideintifier out of scope");
+			// 	process.exit();
+			// }
+			// else{
+			// 	console.log("not entering");
+			// 	console.log("symb table: ", objsym.find(classname).find(expre.ekind.name));
+			// }
+
+			if(objsym.find(classname).find(expre.ekind.name) != "I didn't find anything master" ){
 				expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
 			}
 			else{
@@ -1125,13 +1147,19 @@ function tcheckExp(expre, classname, objsym, metsym){
 			var t2 = expre.ekind.itrue.ekind.rettype;
 			var t3 = expre.ekind.ifalse.ekind.rettype;
 
+			// console.log("condi: ",condi);
+			// console.log("t2: ",t2);
+			// console.log("t3: ",
+			// t3);
+
+
 			if(condi != "Bool"){
 				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
 				process.exit();
 			}
 
 			var lCA = leastCommonAncestor(t2, t3);
-			console.log(lCA, " from the if statement");
+			// console.log(lCA, " from the if statement");
 			expre.ekind.rettype = lCA;
 
 			break;
@@ -1147,8 +1175,9 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "while":
 			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
 			tcheckExp(expre.ekind.value, classname, objsym, metsym);
-
 			var condi = expre.ekind.cond.ekind.rettype;
+			// console.log(condi);
+
 //			var t2 = expre.ekind.value.ekind.rettype;
 			if(condi != "Bool"){
 				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: while condition not Booleantype");
@@ -1157,11 +1186,27 @@ function tcheckExp(expre, classname, objsym, metsym){
 			expre.ekind.rettype = "Object";
 			break;
 		case "case":
+			// console.log(expre.ekind.exp);
 			var types = [];
+			var branches = [];
 			for(var q = 0; q < expre.ekind.action.length; q++){
+
+
+				if(branches.indexOf(expre.ekind.action[q].id.name) == -1){
+					branches.push(expre.ekind.action[q].id.name);
+				}
+				else{
+					console.log("ERROR: "+ expre.ekind.action[q].id.loc+ ": Type-Check: repeated branches of case");
+					process.exit();
+				}
+				if(expre.ekind.action[q].atype.name == "SELF_TYPE"){
+					console.log("ERROR: "+ expre.ekind.action[q].atype.loc + ": Type-Check: self-type as a branch of case");
+					process.exit();
+				}
+
+				// TODO: push onto objsym
 				tcheckExp(expre.ekind.action[q].exp, classname, objsym, metsym);
 				types.push(expre.ekind.action[q].exp.ekind.rettype);
-				// console.log(types);
 			}
 			// have a list of types
 			var basecase = leastCommonAncestor(types[0], types[1]);
@@ -1169,7 +1214,14 @@ function tcheckExp(expre, classname, objsym, metsym){
 				basecase= leastCommonAncestor(basecase, types[i]);
 			}
 			// console.log(basecase);
-			expre.ekind.rettype = basecase;
+			if(basecase == "SELF_TYPE"){
+				expre.ekind.rettype = expre.ekind.exp.ekind.rettype;
+			}
+			else{
+				expre.ekind.rettype = basecase;
+
+			}
+
 			break;
 		case "dynamic_dispatch":
 			// type is undefined or null, because it's not static!!
@@ -1228,11 +1280,88 @@ function tcheckExp(expre, classname, objsym, metsym){
 			expre.ekind.rettype = finalOne;
 			break;
 		case "let":
+			var t0 = expre.ekind.letlist[0].atype.name;
+			var t2 = "";
+
+			// console.log(exprse.ekind.letlist[0]);
+			if( expre.ekind.letlist[0].exp == 'undefined' || expre.ekind.letlist[0].exp== ""){
+				// console.log("let w/ no larrow expression");
+
+				// console.log(objsym.find(classname).print(), "class:", t0);
+				objsym.find(classname).add(expre.ekind.letlist[0].id.name, t0);
+				// console.log(objsym.find(classname).print());
+				tcheckExp(expre.ekind.inexp, classname, objsym, metsym);
+				t2 = expre.ekind.inexp.ekind.rettype;
+				objsym.find(classname).remove(expre.ekind.letlist[0].id.name);
+			}
+			else{
+				tcheckExp(expre.ekind.letlist[0].exp, classname, objsym, metsym);
+				var t1 = expre.ekind.letlist[0].exp.ekind.rettype;
+
+				if(t1 == "SELF_TYPE"){
+					if(checkInherit(t0, t1)){
+						// t0 = "SELF_TYPE";
+					}
+					else{
+						console.log("ERROR: " + expre.eloc+ ": Type-Check: self type let error");
+						process.exit();
+					}
+				}else{
+					// t0 = t0;
+				}
+
+				if(checkInherit(t0, t1)){
+					objsym.find(t0).add(expre.ekind.letlist[0].id.name, t0);
+					tcheckExp(expre.ekind.inexp, classname, objsym, metsym);
+					t2 = expre.ekind.inexp.ekind.rettype;
+					objsym.find(t0).remove(expre.ekind.letlist[0].id.name);
+				}
+				else{
+					console.log("ERROR: " + expre.eloc+ ": Type-Check: let expression error yo t0, t1");
+					process.exit();
+				}
+			}
+
+			expre.ekind.rettype = t2;
 			break;
 		case "static_dispatch":
+			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
+			var eo = expre.ekind.exp.ekind.rettype;
+			// console.log(expre.ekind.exp.e
+				// kind);
+				// console.log(checkInherit(expre.ekind.dtype.name, eo));
+			if(checkInherit(expre.ekind.dtype.name, eo)){
+				var theMethod = metsym.find(expre.ekind.dtype.name).find(expre.ekind.did.name);
+				var finalOne = theMethod.pop();
+
+				if(expre.ekind.arglist.length == theMethod.length){
+					for(var q = 0; q < theMethod.length; q++){
+						if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
+							// it is false!!
+							console.log("ERROR: " + expre.eloc+ ": Type-Check: static dispatch error bad formals!!");
+							process.exit();
+						}
+					}
+				}
+				else{
+					console.log("ERROR: " + expre.eloc+ ": Type-Check: static dispatch error wrong # params");
+					process.exit();
+				}
+			}
+			else{
+				// console.log(eo, ":child type, parent:", expre.ekind.dtype.name);
+				console.log("ERROR: " + expre.eloc+ ": Type-Check: static dispatch error yo");
+				process.exit();
+			}
+			if(finalOne == "SELF_TYPE"){
+				expre.ekind.rettype = e0;
+			}
+			else{
+				expre.ekind.rettype = finalOne;
+			}
 			break;
 		default:
-			console.log("enter default", expid);
+			// console.log("enter default", expid);
 			expre.rettype = "DIVYA DON'T COMMENT ME OUT";
 
 
@@ -1278,8 +1407,9 @@ function tcheckAtt(myatt, classname, objsym, metsym){
 		var bodytype = myatt.finit.ekind.rettype;
 //		console.log(myatt.finit);
 
-		if(checkInherit(objsym.find(classname).find(aname), bodytype)){
-			console.log("ok!!!", objsym.find(classname).find(aname));
+		if(checkInherit(objsym.find(classname).find(aname), bodytype) || objsym.find(classname).find(aname)==bodytype){
+			// console.log("ok!!!", ob
+			// jsym.find(classname).find(aname));
 		}
 		else{
 			console.log("ERROR: "+ myatt.finit.eloc+ ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
@@ -1558,6 +1688,17 @@ for(ind in all_classes){
 
 //------------------SECTION: NEXT ANNOTATED AST
 // ---------------- Look @ python code!
+
+// for(ind in user_classes){
+// 	var indof = userClasses[ind];
+// 	if(userClasses.cname.loc == mylineno){
+// 		// print this class
+//
+// 	}
+// 	else{
+// 		// do nothing? let it keep looking?
+// 	}
+// }
 // write("implementation_map\n"+ all_classes.length + "\n");
 // var ind = 0;
 // for(ind in all_classes){
@@ -1611,6 +1752,30 @@ for(ind in all_classes){
 // 				// write("0\n");
 // 	}
 // }
+
+//-------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //-------------------SECTION 8: Helper Functions
 
