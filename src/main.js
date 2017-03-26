@@ -11,6 +11,27 @@ symboltable = require("./symboltable.js");
 //var ind = myTable.mem("5");
 //console.log(myTable, ind);
 
+//-----------SECTION: define the built in functions----------------------------
+// Base functions that belong to IO
+var out_string = new Method(new Id(0, "out_string"), [new Formal(new Id(0, "x"), new Id(0, "String"))], new Id(0, "SELF_TYPE"), new Exp(0, new Id(0, "self")), "IO");
+var out_int = new Method(new Id(0, "out_int"), [new Formal(new Id(0, "x"), new Id(0, "Int"))], new Id(0, "SELF_TYPE"), new Exp(0, new Id(0, "self")), "IO");
+var in_string = new Method(new Id(0, "in_string"), [], new Id(0, "String"), new Exp(0, new String("hello")), "IO");
+var in_int = new Method(new Id(0, "in_int"), [], new Id(0, "Int"), new Exp(0, new Integer(555)), "IO");
+
+//Base functions that belong to Object
+var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"), new Exp(0, new Integer(555)), "Object");
+var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"), new Exp(0, new String("555")), "Object");
+var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"), new Exp(0, new Id(0, "self")), "Object");
+
+//Base functions that belong to String
+var melen = new Method(new Id(0, "length"), [], new Id(0, "Int"), new Exp(0, new Integer(555)), "String");
+var meconcat = new Method(new Id(0, "concat"), [new Formal(new Id(0, "s"), new Id(0, "String"))], new Id(0, "String"), new Exp(0, new String("hello")), "String");
+var mesubs = new Method(new Id(0, "substr"),[new Formal(new Id(0, "i"), new Id(0, "Int")), new Formal(new Id(0, "l"), new Id(0, "Int"))], new Id(0, "String"), new Exp(0, new String("hello")), "String");
+
+
+
+
+
 //------------SECTION 1: define types--------------------------------------
 
 function CoolClass(cname, inhert, features){
@@ -160,8 +181,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-//	contents = contents.split("\n");
-	contents = contents.split("\r\n");
+	contents = contents.split("\n");
+	// contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -469,18 +490,20 @@ for(var q = 0; q < userClasses.length; q++){
 //-------------SECTION 4: Generate Classmap
 
 // A function that will output each expression that can be found
-function output_exp(expression){
+function output_exp(expression, typeflag){
 
 	var exptype = expression.ekind.etype;
 	write("" + expression.eloc + "\n");
-
+	if(typeflag){
+		write(expression.ekind.rettype + "\n");
+	}
 	//check every type of expression
 	if(check(exptype, ["integer", "string"])){
 		write(exptype + "\n" + expression.ekind.value  + "\n");
 	}
 	else if (exptype == "not"){
 		write("not"  + "\n")
-		output_exp(expression.ekind.value);
+		output_exp(expression.ekind.value, typeflag);
 	}
 	else if (exptype == "bool"){
 		write(expression.ekind.value  + "\n");
@@ -491,12 +514,12 @@ function output_exp(expression){
 	}
 	else if(check(exptype, ["lt", "eq", "le", "plus", "minus", "times", "divide"])){
 		write(exptype + "\n");
-		output_exp(expression.ekind.val1);
-		output_exp(expression.ekind.val2);
+		output_exp(expression.ekind.val1, typeflag);
+		output_exp(expression.ekind.val2, typeflag);
 	}
 	else if(check(exptype, ["negate", "isvoid"])){
 		write(exptype + "\n");
-		output_exp(expression.ekind.value);
+		output_exp(expression.ekind.value, typeflag);
 	}
 	else if(exptype == "new"){
 		write(exptype + "\n");
@@ -508,36 +531,36 @@ function output_exp(expression){
 		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n" + expression.ekind.args.length + "\n");
 
 		for(var q = 0; q < expression.ekind.args.length; q++){
-			output_exp(expression.ekind.args[q]);
+			output_exp(expression.ekind.args[q], typeflag);
 		}
 	}
 	else if(exptype == "if"){
 		write(exptype + "\n");
-		output_exp(expression.ekind.cond);
-		output_exp(expression.ekind.itrue);
-		output_exp(expression.ekind.ifalse);
+		output_exp(expression.ekind.cond, typeflag);
+		output_exp(expression.ekind.itrue, typeflag);
+		output_exp(expression.ekind.ifalse, typeflag);
 	}
 	else if(exptype == "while"){
 		write(exptype + "\n");
-		output_exp(expression.ekind.cond);
-		output_exp(expression.ekind.value);
+		output_exp(expression.ekind.cond, typeflag);
+		output_exp(expression.ekind.value, typeflag);
 	}
 	else if(exptype == "assign"){
 		write(exptype + "\n");
 		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n");
-		output_exp(expression.ekind.exp);
+		output_exp(expression.ekind.exp, typeflag);
 
 	}
 	else if(exptype == "block"){
 		write(exptype + "\n");
 		write(expression.ekind.value.length + "\n");
 		for(var q = 0; q < expression.ekind.value.length; q++){
-			output_exp(expression.ekind.value[q]);
+			output_exp(expression.ekind.value[q], typeflag);
 		}
 	}
 	else if(exptype == "case"){
 		write(exptype + "\n");
-		output_exp(expression.ekind.exp);
+		output_exp(expression.ekind.exp, typeflag);
 
 		var len = expression.ekind.action.length;
 		var mylist = expression.ekind.action;
@@ -545,7 +568,7 @@ function output_exp(expression){
 		for(var q = 0; q < len; q++){
 			write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
 			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
-			output_exp(mylist[q].exp);
+			output_exp(mylist[q].exp, typeflag);
 		}
 	}
 	else if(exptype == "let"){
@@ -566,12 +589,12 @@ function output_exp(expression){
 			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
 		}
 
-		output_exp(expression.ekind.inexp);
+		output_exp(expression.ekind.inexp, typeflag);
 	}
 	else if(check(exptype, ["static_dispatch", "dynamic_dispatch"])){
 		// console.log(expression.ekind.dtype.name, " I think");
 		write(exptype + "\n");
-		output_exp(expression.ekind.exp);
+		output_exp(expression.ekind.exp, typeflag);
 
 		if(exptype == "static_dispatch"){
 			write(expression.ekind.dtype.loc + "\n" + expression.ekind.dtype.name + "\n");
@@ -582,7 +605,7 @@ function output_exp(expression){
 		var len = mylist.length;
 		write(len + "\n");
 		for(var q = 0; q < len; q++){
-			output_exp(mylist[q]);
+			output_exp(mylist[q], typeflag);
 		}
 	}
 }
@@ -822,16 +845,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 				if(base_classes.indexOf(parent) != -1 ){
 					if(parent == "IO"){
 						var meth1 = [];
-						var out_string = new Method(new Id(0, "out_string"), [new Formal(
-								new Id(0, "x"), new Id(0, "String"))], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)), "IO");
-						var out_int = new Method(new Id(0, "out_int"), [new Formal(
-								new Id(0, "x"), new Id(0, "Int"))], new Id(0, "SELF_TYPE"), new Exp(0, new Id(0, "self")), "IO");
-						var in_string = new Method(new Id(0, "in_string"), [], new Id(0, "String"), new Exp(0, new Integer(555)), "IO");
-						var in_int = new Method(new Id(0, "in_int"), [], new Id(0, "Int"), new Exp(0, new Integer(555)), "IO");
-						var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"), new Exp(0, new Integer(555)), "Object");
-		        // console.log(methabort.formals.length + " this is how many formals");
-		        var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"), new Exp(0, new Integer(555)), "Object");
-		        var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)), "Object");
+
 
 						meth1.push(methabort);
 						meth1.push(copy);
@@ -880,10 +894,6 @@ for(var ind = 0; ind < graph.length; ind ++){
 					//check for redefining Object's methods
 					else if(parent == "Object"){
 						var meth1 = [];
-						var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"), new Exp(0, new Integer(555)));
-		        // console.log(methabort.formals.length + " this is how many formals");
-		        var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"), new Exp(0, new Integer(555)));
-		        var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)));
 		        meth1.push(methabort);
 		        meth1.push(copy);
 		        meth1.push(type_name);
@@ -922,9 +932,6 @@ for(var ind = 0; ind < graph.length; ind ++){
 		else{
 			//if a class doesn't inherit, it inherits from Object
 			var meth1 = [];
-			var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"), new Exp(0, new Integer(555)));
-			var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"), new Exp(0, new Integer(555)));
-			var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)));
 			meth1.push(methabort);
 			meth1.push(copy);
 			meth1.push(type_name);
@@ -1089,13 +1096,20 @@ function tcheckExp(expre, classname, objsym, metsym){
 				}
 			}
 			break;
-	case "identifer":
+	case "identifier":
 			// expre.rettype = "String";
-			if(objsym.find(classname).find(expre.ekind.name)==expre.ekind.name){
+			if(expre.ekind.name == "self"){
+				expre.ekind.rettype = "SELF_TYPE";
+				break;
+			}
+			// console.log(objsym.find(classname).find(expre.ekind.name));
+			// console.log(expre.ekind.name);
+			if(objsym.find(classname).find(expre.ekind.name) != "I didn't find anything master"){
 				expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
 			}
 			else{
 				console.log("ERROR: "+ expre.eloc+ ": Type-Check: ideintifier checking failed typchecking");
+				// console.log(objsym.find(classname).print());
 				process.exit();
 			}
 			break;
@@ -1103,18 +1117,18 @@ function tcheckExp(expre, classname, objsym, metsym){
 			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
 			tcheckExp(expre.ekind.itrue, classname, objsym, metsym);
 			tcheckExp(expre.ekind.ifalse, classname, objsym, metsym);
-			
+
 			var condi = expre.ekind.cond.ekind.rettype;
 			var t2 = expre.ekind.itrue.ekind.rettype;
 			var t3 = expre.ekind.ifalse.ekind.rettype;
-			
+
 			if(condi != "Bool"){
 				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
 				process.exit();
 			}
 			// TODO: FINISH IF
 			// ^^^^
-			break;		
+			break;
 		case "block":
 			var last_type = "";
 			for(var q = 0; q < expre.ekind.value.length; q++){
@@ -1127,7 +1141,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "while":
 			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
 			tcheckExp(expre.ekind.value, classname, objsym, metsym);
-			
+
 			var condi = expre.ekind.cond.ekind.rettype;
 //			var t2 = expre.ekind.value.ekind.rettype;
 			if(condi != "Bool"){
@@ -1159,7 +1173,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 			}
 //			console.log(theMethod);
 			var finalOne = theMethod.pop();
-			
+
 			if(expre.ekind.arglist.length == theMethod.length){
 				for(var q = 0; q < theMethod.length; q++){
 					if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
@@ -1173,7 +1187,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 				console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error yo");
 				process.exit();
 			}
-			// SO FAR OK!!! 
+			// SO FAR OK!!!
 			if(finalOne == "SELF_TYPE"){
 				expre.ekind.rettype = t0;
 			}
@@ -1185,7 +1199,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "self_dispatch":
 			var theMethod = metsym.find(classname).find(expre.ekind.did.name);
 			var finalOne = theMethod.pop();
-			
+
 			if(expre.ekind.arglist.length == theMethod.length){
 				for(var q = 0; q < theMethod.length; q++){
 					if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
@@ -1199,7 +1213,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 				console.log("ERROR: " + expre.eloc+ ": Type-Check: self dispatch error yo");
 				process.exit();
 			}
-			// SO FAR OK!!! 
+			// SO FAR OK!!!
 			expre.ekind.rettype = finalOne;
 			break;
 		case "let":
@@ -1207,7 +1221,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "static_dispatch":
 			break;
 		default:
-			console.log("hi sanity check, I am impossible", expid);
+			console.log("enter default", expid);
 			expre.rettype = "DIVYA DON'T COMMENT ME OUT";
 
 
@@ -1215,16 +1229,27 @@ function tcheckExp(expre, classname, objsym, metsym){
 //	console.log(expre);
 //	return expre;
 }
+
+//checking methods
 function tcheckMeth(mymeth, classname, objsym, metsym){
 	var supposedRet = mymeth.mtype.name;
-
+	// add the allowable parameters
+	for(var q = 0; q < mymeth.formals.length; q++){
+		objsym.find(classname).add(mymeth.formals[q].fname.name, mymeth.formals[q].ftype.name);
+	}
+	// type-checks the body of the expression
 	tcheckExp(mymeth.mbody, classname, objsym, metsym);
 	var actualRet = mymeth.mbody.ekind.rettype;
-	
+
 	if(!checkInherit(supposedRet, actualRet)){
 		console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
 		console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
 	}
+	// mymeth.rettype = supposedRet;
+	for(var q = 0; q < mymeth.formals.length; q++){
+		objsym.find(classname).remove(mymeth.formals[q].fname.name, mymeth.formals[q].ftype.name);
+	}
+	//pop off method parameters
 	return true;
 }
 function tcheckAtt(myatt, classname, objsym, metsym){
@@ -1241,7 +1266,7 @@ function tcheckAtt(myatt, classname, objsym, metsym){
 
 		var bodytype = myatt.finit.ekind.rettype;
 //		console.log(myatt.finit);
-		
+
 		if(checkInherit(objsym.find(classname).find(aname), bodytype)){
 			console.log("ok!!!", objsym.find(classname).find(aname));
 		}
@@ -1362,50 +1387,36 @@ for(ind in all_classes){
 // move this over some
 writeFirst("");
 
- write("class_map\n"+ all_classes.length + "\n");
- var ind = 0;
- for(ind in all_classes){
- 	write("" + all_classes[ind] + "\n");
- 	if(check(all_classes[ind], user_classes)){
- 		var indof = user_classes.indexOf(all_classes[ind]);
- 		write(userClasses[indof].attrib.length + "\n");
- 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
-
- 			if( userClasses[indof].attrib[i].finit != ""){
- 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
- 				output_exp(userClasses[indof].attrib[i].finit);
- 			}
- 			else{
- 				write("no_initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
- 			}
- 		}
- 	}
- 	else{
- 		write("0\n");
- 	}
- }
+ // write("class_map\n"+ all_classes.length + "\n");
+ // var ind = 0;
+ // for(ind in all_classes){
+ // 	write("" + all_classes[ind] + "\n");
+ // 	if(check(all_classes[ind], user_classes)){
+ // 		var indof = user_classes.indexOf(all_classes[ind]);
+ // 		write(userClasses[indof].attrib.length + "\n");
+ // 		for(var i = 0; i < userClasses[indof].attrib.length; i++){
+ //
+ // 			if( userClasses[indof].attrib[i].finit != ""){
+ // 				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
+ // 				output_exp(userClasses[indof].attrib[i].finit, false);
+ // 			}
+ // 			else{
+ // 				write("no_initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
+ // 			}
+ // 		}
+ // 	}
+ // 	else{
+ // 		write("0\n");
+ // 	}
+ // }
 
 // --------------------- finish the class mapping
 // --------------------- commented out to test imp map
 function baseinheritObject(intype){
 	var meth1 = [];
-	var methabort = new Method(new Id(0, "abort"), [], new Id(0, "Object"),
-	new Exp(0, new Integer(555)), "Object");
-	// console.log(methabort.formals.length + " this is how many formals");
-	var type_name = new Method(new Id(0, "type_name"), [], new Id(0, "String"),
-	new Exp(0, new Integer(555)), "Object");
-	var copy = new Method(new Id(0, "copy"), [], new Id(0, "SELF_TYPE"),
-	new Exp(0, new Integer(555)), "Object");
+
 	if(intype == "String"){
-		var melen = new Method(new Id(0, "length"), [], new Id(0, "Int"),
-		new Exp(0, new Integer(555)), "String");
-		var meconcat = new Method(new Id(0, "concat"),
-		[new Formal(new Id(0, "s"), new Id(0, "String"))], new Id(0, "String"),
-		new Exp(0, new Integer(555)), "String");
-		var mesubs = new Method(new Id(0, "substr"),
-		[new Formal(new Id(0, "i"), new Id(0, "Int")),
-		new Formal(new Id(0, "l"), new Id(0, "Int"))], new Id(0, "String"),
-		new Exp(0, new Integer(555)), "String");
+
 
 		meth1.push(methabort);
 		meth1.push(copy);
@@ -1417,12 +1428,7 @@ function baseinheritObject(intype){
 		// meth1.push();
 	}
 	else if(intype == "IO"){
-		var out_string = new Method(new Id(0, "out_string"), [new Formal(
-				new Id(0, "x"), new Id(0, "String"))], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)), "IO");
-		var out_int = new Method(new Id(0, "out_int"), [new Formal(
-				new Id(0, "x"), new Id(0, "Int"))], new Id(0, "SELF_TYPE"), new Exp(0, new Integer(555)), "IO");
-		var in_string = new Method(new Id(0, "in_string"), [], new Id(0, "String"), new Exp(0, new Integer(555)), "IO");
-		var in_int = new Method(new Id(0, "in_int"), [], new Id(0, "Int"), new Exp(0, new Integer(555)), "IO");
+
 
 		meth1.push(methabort);
 		meth1.push(copy);
@@ -1461,8 +1467,6 @@ write("implementation_map\n"+ all_classes.length + "\n");
 var ind = 0;
 //console.log("baseclasses: ",base_classes);
 //console.log("all classes: ", all_classes);
-
-
 for(ind in all_classes){
 //	console.log("ind", ind);
 
@@ -1501,26 +1505,11 @@ for(ind in all_classes){
 				// console.log(userClasses[indof].method[i]);
 				// write(userClasses[indof].method[i].mtype.name);
 				write(userClasses[indof].cname.name + "\n");
-				output_exp(userClasses[indof].method[i].mbody);
+				output_exp(userClasses[indof].method[i].mbody, true);
 					//<<do stuff>>
 
 			}
-
 			// for loop for all the methds!
-
-
-
-			// console.log(userClasses[indof].cname.name + "class name");
-			// console.log(userClasses[indof].method[i]);
-			// console.log(userClasses[indof].method[i].definition);
-			// console.log()
-			// if( userClasses[indof].attrib[i].finit != ""){
-			// 	write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
-			// 	output_exp(userClasses[indof].attrib[i].finit);
-			// }
-			// else{
-			// 	write("no_initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
-			// }
 		}
 	}
 	else{
@@ -1531,31 +1520,86 @@ for(ind in all_classes){
 }
 
 // ------------------ SECTION IDK: Parent map
- write("parent_map\n"+ (all_classes.length - 1) + "\n");
- for(ind in all_classes){
- 	var indof = user_classes.indexOf(all_classes[ind]);
- 	if(indof == -1){
- 		// this is a base class
- 		if(all_classes[ind] != "Object"){
- 			write(all_classes[ind] + "\n");
- 			write("Object\n");
- 		}
- 	}
- 	else{
- 		// this is a user class, it either inherits a thing
- 		// or it inherits object
- 		write(all_classes[ind] + "\n");
- 		if(userClasses[indof].inherit == ""){
- 			// it inherits nothing
- 			write("Object\n");
+ // write("parent_map\n"+ (all_classes.length - 1) + "\n");
+ // for(ind in all_classes){
+ // 	var indof = user_classes.indexOf(all_classes[ind]);
+ // 	if(indof == -1){
+ // 		// this is a base class
+ // 		if(all_classes[ind] != "Object"){
+ // 			write(all_classes[ind] + "\n");
+ // 			write("Object\n");
+ // 		}
+ // 	}
+ // 	else{
+ // 		// this is a user class, it either inherits a thing
+ // 		// or it inherits object
+ // 		write(all_classes[ind] + "\n");
+ // 		if(userClasses[indof].inherit == ""){
+ // 			// it inherits nothing
+ // 			write("Object\n");
+ //
+ // 		}
+ // 		else{
+ // 			write(userClasses[indof].inherit.name +"\n");
+ // 		}
+ // 	}
+ // }
 
- 		}
- 		else{
- 			write(userClasses[indof].inherit.name +"\n");
- 		}
- 	}
- }
+//------------------SECTION: NEXT ANNOTATED AST
+// ---------------- Look @ python code!
+// write("implementation_map\n"+ all_classes.length + "\n");
+// var ind = 0;
+// for(ind in all_classes){
+//	console.log("ind", ind);
 
+	// write("" + all_classes[ind] + "\n");
+
+// 	if(check(all_classes[ind], user_classes)){
+// 		// console.log(userClasses[indof].method);
+// 		var indof = user_classes.indexOf(all_classes[ind]);
+//
+// 		write(userClasses[indof].method.length + "\n");
+// 		// Go through all of the methods in a class
+// 		for(var i = 0; i < userClasses[indof].method.length; i++){
+// 			// write the method name
+// 			// write the number of formals and then the actual formal names
+// 			write(userClasses[indof].method[i].mname.name + "\n");
+// 			write(userClasses[indof].method[i].formals.length + "\n");
+// 			for(var q = 0; q < userClasses[indof].method[i].formals.length; q++){
+// 				write(userClasses[indof].method[i].formals[q].fname.name + "\n");
+// 			}
+// 			//Check if this is an internal methid
+// 			if (check(userClasses[indof].method[i].definition, base_classes)){
+// 				var internalmeth = userClasses[indof].method[i];
+// 				// write(internalmeth.mname.name + "\n");
+// 				// write(internalmeth.formals.length + "\n");
+// //				console.log("internal: ",userClasses[indof].method[i].definition);
+// 				write(internalmeth.definition + "\n");
+// 				write(internalmeth.mbody.eloc + "\n");
+// 				write(internalmeth.mtype.name + "\n");
+// 				write("internal\n");
+// 				write(internalmeth.definition + "."+ internalmeth.mname.name + "\n");
+//
+//
+// 			}
+// 			// this is not an internal method, so do other stuff
+// 			else{
+// 				// console.log(userClasses[indof].method[i]);
+// 				// write(userClasses[indof].method[i].mtype.name);
+// 				write(userClasses[indof].cname.name + "\n");
+// 				output_exp(userClasses[indof].method[i].mbody, true);
+// 					//<<do stuff>>
+//
+// 			}
+// 			// for loop for all the methds!
+// 		}
+// 	}
+// 	else{
+// 		// console.log(all_classes[ind]);
+// 		// baseinheritObject(all_classes[ind]);
+// 				// write("0\n");
+// 	}
+// }
 
 //-------------------SECTION 8: Helper Functions
 

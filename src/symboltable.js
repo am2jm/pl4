@@ -22,16 +22,16 @@
 exports.SymbolTable = function() {
     // Our private symbol table object
     var table = {};
-    
+
     // Now, we define several public methods
-    
+
     /*
      * Empty a hash table.
      */
     this.clear = function() {
         table = {};
     };
-    
+
     /*
      * add( x, y ) adds a binding of x to y in table tbl. Previous bindings for
      * x are not removed, but simply hidden.
@@ -45,7 +45,7 @@ exports.SymbolTable = function() {
             table[x] = [y];
         }
     };
-    
+
     /*
      * find( x ) returns the current binding of x in tbl, or throws "not found" if
      * no such binding exists.
@@ -54,17 +54,19 @@ exports.SymbolTable = function() {
         if(Object.keys(table).indexOf(x) > -1) {
             return table[x][table[x].length-1];
         } else {
-            throw "not found";
+            // throw "not found";
+            // console.log(x, "not found in table!!");
+            return "I didn't find anything master";
         }
     };
-    
+
     /*
      * Returns whether x is bound in the table.
      */
     this.mem = function(x) {
         return x in table;
     };
-    
+
     /*
      * removes the current bidning of x, restoring the previous binding if it
      * exists.
@@ -74,7 +76,7 @@ exports.SymbolTable = function() {
             table[x].pop();
         }
     };
-	
+
 	this.print = function(x){
 		return table;
 	}
