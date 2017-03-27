@@ -10,7 +10,6 @@ symboltable = require("./symboltable.js");
 //console.log(ind);
 //var ind = myTable.mem("5");
 //console.log(myTable, ind);
-
 //-----------SECTION: define the built in functions----------------------------
 // Base functions that belong to IO
 var out_string = new Method(new Id(0, "out_string"), [new Formal(new Id(0, "x"), new Id(0, "String"))], new Id(0, "SELF_TYPE"), new Exp(0, new Id(0, "self")), "IO");
@@ -181,8 +180,8 @@ function Let(letlist, inexp){
 
 function readFile(){
 	var contents = fs.readFileSync(process.argv[2]).toString();
-//	contents = contents.split("\n");
-	 contents = contents.split("\r\n");
+	contents = contents.split("\n");
+	//  contents = contents.split("\r\n");
 	contents.pop();
 	return contents;
 }
@@ -270,6 +269,7 @@ function read_features(clname){
 
 		// console.log(mbody);
 		// console.log("^ function");
+		// console.log("clname",clname);
 		return new Method(mname, formals, mtype, mbody, clname);
 	}
 }
@@ -327,7 +327,9 @@ function read_exp(){
 	else if(check(citem, ["lt", "eq", "le", "plus", "minus", "times", "divide"])){
 		var item1 = read_exp();
 		var item2 = read_exp();
+		// console.log(eloc, item1);
 		ekind = new Comp(citem, item1, item2);
+		// console.log(eloc,ekind);
 	}
 	else if(citem == "negate"){
 		ekind = new Negate(read_exp());
@@ -351,13 +353,19 @@ function read_exp(){
 		ekind = new Assign("assign", read_id(), read_exp());
 	}
 	else if(citem == "self_dispatch"){
-		sdlist = [];
+		var sdlist = [];
 		var myid = read_id();
 		var len = read();
+		// console.log(myid.loc, len);
 		for( var i = 0; i < len; i++){
-			sdlist.push(read_exp());
+			var item = read_exp();
+			// console.log(eloc, item);
+			sdlist.push(item);
 		}
+		// console.log(myid.loc, sdlist);
+
 		ekind = new SDispatch("self_dispatch", myid, sdlist);
+		// console.log(eloc, ekind);
 	}
 	else if(citem == "if"){
 		ekind = new If("if", read_exp(), read_exp(), read_exp());
@@ -375,6 +383,10 @@ function read_exp(){
 			var myid = read_id();
 			var mytype = read_id();
 			var myexp = read_exp();
+			if(myid.name == "self"){
+				console.log("ERROR: " + myid.loc + ": Type-Check: cannot use self as a thing in !!");
+				process.exit();
+			}
 
 			actlist.push(new Action(myid, mytype, myexp));
 		}
@@ -401,6 +413,10 @@ function read_exp(){
 			}
 			else{
 				console.log("This let not possible");
+			}
+			if(myid.name == "self"){
+				console.log("ERROR: " + myid.loc + ": Type-Check: cannot use self as a thing in !!");
+				process.exit();
 			}
 
 			letlist.push(new Action(myid, mytype, myexp));
@@ -533,7 +549,7 @@ function output_exp(expression, typeflag){
 		write(expression.ekind.value.loc + "\n" + expression.ekind.value.name+ "\n");
 	}
 	else if(exptype == "self_dispatch"){
-		console.log(expression.ekind, " I think");
+		// console.log(expression.ekind, " I think");
 		write(exptype + "\n");
 		write(expression.ekind.eid.loc + "\n" + expression.ekind.eid.name + "\n" + expression.ekind.args.length + "\n");
 
@@ -588,13 +604,18 @@ function output_exp(expression, typeflag){
 		for(var q = 0; q < len; q++){
 			if(mylist[q].exp == ""){
 				write("let_binding_no_init\n");
+				write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
+				write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
 			}
 			else{
 				write("let_binding_init\n");
+				write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
+				write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
+				output_exp(mylist[q].exp, typeflag);
 			}
-			write(mylist[q].id.loc + "\n" + mylist[q].id.name + "\n");
-			write(mylist[q].atype.loc + "\n" + mylist[q].atype.name + "\n");
+
 		}
+
 
 		output_exp(expression.ekind.inexp, typeflag);
 	}
@@ -765,8 +786,36 @@ for(var ind = 0; ind < graph.length; ind ++){
 		userClasses[indof].attrib = attrib;
 		userClasses[indof].method = method;
 		//TODO: sort method alphabetically by the method's name
-		//TODO:
-		//TODO:
+		// var method_name = [];
+		// for (var i = 0 ; i< userClasses[indof].method.length; i++){
+		// 	method_name.push(userClasses[indof].method[i].mname.name);
+		// }
+		// method_name.sort();
+		// var sortedMethods = [];
+		// // console.log("original: ", userClasses[indof].method.length);
+		// for(var i =0; i < method_name.length; i++){
+		// 		for(var j = 0; j<method_name.length; j++){
+		// 			if(method_name[i]==userClasses[indof].method[j].mname.name){
+		// 				sortedMethods.push(userClasses[indof].method[j]);
+		// 			}
+		// 		}
+		// }
+		//
+		//
+		// userClasses[indof].method = [];
+		// for(var i =0; i< sortedMethods.length; i++){
+		// 	userClasses[indof].method.push(sortedMethods[i]);
+		// }
+		// console.log("original: ", userClasses[indof].method.length);
+
+		// console.log("sorted",sortedMethods);
+
+
+
+		// console.log("sorted",userClasses[indof].method);
+
+
+
 		// console.log(userClasses[indof].cname.name);
 		// console.log(method);
 		// this is ok
@@ -774,6 +823,7 @@ for(var ind = 0; ind < graph.length; ind ++){
 //if a class inherits, add the relevant features
 // if the class DOES INHERIT DO THIS
 		if(userClasses[indof].inherit != ""){
+			// console.log("class inherits something:",userClasses[indof].cname.name);
 
 			var parent = userClasses[indof].inherit.name;
 			var pind = user_classes.indexOf(parent);
@@ -782,14 +832,26 @@ for(var ind = 0; ind < graph.length; ind ++){
 			// console.log();
 			// if the parent is a USER CLASS
 			if( pind != -1 ){
+				// console.log("parent is a user class:",userClasses[indof].cname.name);
 
 				var list1 = userClasses[pind].attrib;
 				var list2 = userClasses[indof].attrib;
 
 				//parent
-				var meth1 = userClasses[pind].method;
+				var meth1 = [];
+				// userClasses[pind].method;
+				for(var i = 0; i < userClasses[pind].method.length; i++){
+					meth1.push(userClasses[pind].method[i]);
+				}
+				// console.log("meth1",meth1);
 				//child
-				var meth2 = userClasses[indof].method;
+				var meth2 = []
+				for(var i = 0; i < userClasses[indof].method.length; i++){
+					meth2.push(userClasses[indof].method[i]);
+				}
+				// console.log("meth2", meth2);
+
+// console.log("original meth2", meth2);
 
 				userClasses[indof].attrib = list1.concat(list2);
 				// userClasses[indof].method = [];
@@ -799,12 +861,13 @@ for(var ind = 0; ind < graph.length; ind ++){
 				//
 				// console.log(meth2);
 				// console.log("kid's length");
+				var overrriden = [];
 				for(var par = 0; par < meth1.length; par++){
 					for(var kid = 0; kid < meth2.length; kid++){
 
 						//type checks the Cool formals specifications
-						// console.log(meth1[par]);
-						// console.log(meth2[kid]);
+						// console.log("par",meth1[par]);
+						// console.log("kid", meth2[kid]);
 						if(meth2[kid].mname.name == meth1[par].mname.name){
 							if(!arraysEqual(meth2[kid].formals, meth1[par].formals)){
 								console.log("ERROR: " + meth2[kid].mname.loc + ": Type-Check: bad redefined formals!! " + meth2[kid].mname.name);
@@ -817,7 +880,12 @@ for(var ind = 0; ind < graph.length; ind ++){
 							}
 							// <<code>>
 							// <<effective else-if>>
-							meth1.splice(par, 1);
+							// console.log(par);
+							// console.log("meth1", meth1[par]);
+							// overrriden.push(meth2[kid]);
+							meth1[par] = meth2[kid];
+							meth2.splice(kid, 1);
+							kid--;
 
 						}
 						else{
@@ -825,13 +893,16 @@ for(var ind = 0; ind < graph.length; ind ++){
 						}
 
 					}
-
 				}
-				var temp = userClasses[indof].method;
+
+
+				var temp = meth2;
 				// console.log(temp);
 				// console.log("^ is temp ^");
-				userClasses[indof].method = meth1.concat(temp);
 
+				userClasses[indof].method = meth1.concat(temp);
+				// console.log(userClasses[indof].cname.name,userClasses[indof].method);
+				// console.log("the functions being set", userClasses[indof].method);
 				//checks for Cool attribute rules
 				var attinname = [];
 				for(var t = 0; t < userClasses[indof].attrib.length; t++){
@@ -983,6 +1054,9 @@ for(var ind = 0; ind < graph.length; ind ++){
 
 // take in two class names
 function checkInherit(parent, child){
+	if(parent == child ){
+		return true;
+	}
 	if(user_classes.indexOf(child) != -1 ){
 			var childsparent = userClasses[user_classes.indexOf(child)].inherit;
 
@@ -1003,6 +1077,8 @@ function checkInherit(parent, child){
 		return parent == "Object" || parent == child;
 	}
 }
+
+
 
 function tcheckExp(expre, classname, objsym, metsym){
 	// return a boolean t/f
@@ -1025,8 +1101,8 @@ function tcheckExp(expre, classname, objsym, metsym){
 		case "plus":
 			tcheckExp(expre.ekind.val1, classname, objsym, metsym);
 			tcheckExp(expre.ekind.val2, classname, objsym, metsym);
-			// console.log("e1",expre.ekind.val1.ekind.rettype);
-			// console.log("e2",expre.ekind.val2.ekind.rettype);
+			// console.log("e1",expre.ekind.val1.ekind);
+			// console.log("e2",expre.ekind.val2.ekind);
 
 			if(expre.ekind.val1.ekind.rettype == "Int" && expre.ekind.val2.ekind.rettype == "Int"){
 //				console.log("I am plus");
@@ -1101,7 +1177,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 			else{
 				if(checkInherit(maxtype, mytype)){
 					expre.ekind.rettype = mytype;
-					console.log(mytype, "the inheritance was ok");
+					// console.log(mytype, "the inheritance was ok");
 				}
 				else{
 					// console.log(maxtype, ":parent, child:", mytype);
@@ -1119,16 +1195,21 @@ function tcheckExp(expre, classname, objsym, metsym){
 			// console.log(objsym.find(classname).find(expre.ekind.name));
 			// console.log(expre.ekind.name);
 
-			if(objsym.find(classname).find(expre.ekind.name)==""){
-				console.log("ERROR: "+ expre.eloc+ ": Type-Check: ideintifier checking failed typchecking");
-				process.exit();
+			// if(objsym.find(classname).find(expre.ekind.name)=="" || objsym.find(classname).find(expre.ekind.name)=='undefined'){
+			// 	console.log("ERROR: "+ expre.eloc+ ": Type-Check: ideintifier out of scope");
+			// 	process.exit();
+			// }
+			// else{
+			// 	console.log("not entering");
+			// 	console.log("symb table: ", objsym.find(classname).find(expre.ekind.name));
+			// }
 
-			}
 
 			if(objsym.find(classname).find(expre.ekind.name) != "I didn't find anything master" ){
 				expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
 			}
 			else{
+							console.log("cant find: ",expre.ekind.name);
 				console.log("ERROR: "+ expre.eloc+ ": Type-Check: ideintifier checking failed typchecking");
 				// console.log(objsym.find(classname).print());
 				process.exit();
@@ -1136,12 +1217,10 @@ function tcheckExp(expre, classname, objsym, metsym){
 			break;
 		case "if":
 			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
-			tcheckExp(expre.ekind.itrue, classname, objsym, metsym);
-			tcheckExp(expre.ekind.ifalse, classname, objsym, metsym);
+
 
 			var condi = expre.ekind.cond.ekind.rettype;
-			var t2 = expre.ekind.itrue.ekind.rettype;
-			var t3 = expre.ekind.ifalse.ekind.rettype;
+
 
 			// console.log("condi: ",condi);
 			// console.log("t2: ",t2);
@@ -1153,7 +1232,10 @@ function tcheckExp(expre, classname, objsym, metsym){
 				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
 				process.exit();
 			}
-
+			tcheckExp(expre.ekind.itrue, classname, objsym, metsym);
+			tcheckExp(expre.ekind.ifalse, classname, objsym, metsym);
+			var t2 = expre.ekind.itrue.ekind.rettype;
+			var t3 = expre.ekind.ifalse.ekind.rettype;
 			var lCA = leastCommonAncestor(t2, t3);
 			// console.log(lCA, " from the if statement");
 			expre.ekind.rettype = lCA;
@@ -1170,7 +1252,6 @@ function tcheckExp(expre, classname, objsym, metsym){
 			break;
 		case "while":
 			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
-			tcheckExp(expre.ekind.value, classname, objsym, metsym);
 			var condi = expre.ekind.cond.ekind.rettype;
 			// console.log(condi);
 
@@ -1179,29 +1260,52 @@ function tcheckExp(expre, classname, objsym, metsym){
 				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: while condition not Booleantype");
 				process.exit();
 			}
+			tcheckExp(expre.ekind.value, classname, objsym, metsym);
+
 			expre.ekind.rettype = "Object";
 			break;
 		case "case":
 			// console.log(expre.ekind.exp);
+			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
+
 			var types = [];
-			var branches = [];
+			var branch_types = [];
+
 			for(var q = 0; q < expre.ekind.action.length; q++){
 
-
-				if(branches.indexOf(expre.ekind.action[q].id.name) == -1){
-					branches.push(expre.ekind.action[q].id.name);
+				if(branch_types.indexOf(expre.ekind.action[q].atype.name)==-1){
+						branch_types.push(expre.ekind.action[q].atype.name);
 				}
 				else{
 					console.log("ERROR: "+ expre.ekind.action[q].id.loc+ ": Type-Check: repeated branches of case");
 					process.exit();
 				}
+				// if(!(expre.ekind.action[q].id.name in  branches)){
+				// 	branches[expre.ekind.action[q].id.name]= [expre.ekind.action[q].atype.name];
+				// }
+				// else{
+				// 	var temp_types = branches[expre.ekind.action[q].id.name]
+				// 	if(temp_types.indexOf(expre.ekind.action[q].atype.name)==-1){
+				// 		branches[expre.ekind.action[q].id.name].push(expre.ekind.action[q].atype.name);
+				// 	}
+				// 	else{
+				// 		console.log("ERROR: "+ expre.ekind.action[q].id.loc+ ": Type-Check: repeated branches of case");
+				// 			 		process.exit();
+				// 	}
+				// }
+
 				if(expre.ekind.action[q].atype.name == "SELF_TYPE"){
 					console.log("ERROR: "+ expre.ekind.action[q].atype.loc + ": Type-Check: self-type as a branch of case");
 					process.exit();
 				}
 
+				// console.log("current case branch", expre.ekind.action[q].id.name);
+				// console.log("current case branch type", expre.ekind.action[q].atype.name);
+
 				// TODO: push onto objsym
+				objsym.find(classname).add(expre.ekind.action[q].id.name, expre.ekind.action[q].atype.name);
 				tcheckExp(expre.ekind.action[q].exp, classname, objsym, metsym);
+				objsym.find(classname).remove(expre.ekind.action[q].id.name);
 				types.push(expre.ekind.action[q].exp.ekind.rettype);
 			}
 			// have a list of types
@@ -1209,18 +1313,20 @@ function tcheckExp(expre, classname, objsym, metsym){
 			for (var i =1; i< types.length; i++){
 				basecase= leastCommonAncestor(basecase, types[i]);
 			}
-			// console.log(basecase);
-			if(basecase == "SELF_TYPE"){
-				expre.ekind.rettype = expre.ekind.exp.ekind.rettype;
-			}
-			else{
+			// console.log("case should return", basecase);
+			// console.log("which is:", expre.ekind.exp.ekind.rettype);
+			// if(basecase == "SELF_TYPE"){
+			// 	expre.ekind.rettype = expre.ekind.exp.ekind.rettype;
+			// }
+			// else{
 				expre.ekind.rettype = basecase;
 
-			}
+			// }
 
 			break;
 		case "dynamic_dispatch":
 			// type is undefined or null, because it's not static!!
+			// console.log("exp",expre.ekind);
 			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
 			var t0 = expre.ekind.exp.ekind.rettype;
 			var theMethod;
@@ -1230,12 +1336,26 @@ function tcheckExp(expre, classname, objsym, metsym){
 			else{
 				theMethod = metsym.find(t0).find(expre.ekind.did.name);
 			}
-//			console.log(theMethod);
-			var finalOne = theMethod.pop();
+			if(theMethod == "I didn't find anything master"){
+				console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error not existing!!");
+				process.exit();
 
-			if(expre.ekind.arglist.length == theMethod.length){
-				for(var q = 0; q < theMethod.length; q++){
-					if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
+			}
+//			console.log(theMethod);
+			var finalOne = theMethod[theMethod.length - 1];
+
+			// console.log(expre.ekind.arglist.length);
+			// console.log(theMethod.length);
+			// console.log(expre.ekind, "expre");
+			// console.log(theMethod, "theMethod");
+			// console.log(metsym.find("D").print());
+			if(expre.ekind.arglist.length == (theMethod.length-1)){
+				for(var q = 0; q < theMethod.length-1; q++){
+					// console.log(theMethod[q], "the method");
+					// console.log(expre.ekind.arglist[q], "the method");
+					tcheckExp(expre.ekind.arglist[q], classname, objsym, metsym);
+
+					if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)){
 						// it is false!!
 						console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error bad formals!!");
 						process.exit();
@@ -1256,12 +1376,27 @@ function tcheckExp(expre, classname, objsym, metsym){
 //			console.log("whoooo", expre.ekind.rettype);
 			break;
 		case "self_dispatch":
-			var theMethod = metsym.find(classname).find(expre.ekind.did.name);
-			var finalOne = theMethod.pop();
 
-			if(expre.ekind.arglist.length == theMethod.length){
-				for(var q = 0; q < theMethod.length; q++){
-					if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
+			var theMethod = metsym.find(classname).find(expre.ekind.eid.name);
+			// console.log(expre.eloc, theMethod);
+			if(theMethod == "I didn't find anything master"){
+				console.log("ERROR: " + expre.eloc+ ": Type-Check: self dispatch error not existing!!");
+				process.exit();
+
+			}
+			// console.log("arg list: ",expre.ekind.args);
+			var finalOne = theMethod[theMethod.length - 1];
+			// console.log(expre.ekind);
+
+			if(expre.ekind.args.length == theMethod.length-1){
+
+
+
+				for(var q = 0; q < theMethod.length-1; q++){
+					// console.log("parent: ",theMethod[q]);
+					// console.log("child: ",expre.ekind.args[q]);
+					tcheckExp(expre.ekind.args[q], classname, objsym, metsym);
+					if(!checkInherit(theMethod[q], expre.ekind.args[q].ekind.rettype)){
 						// it is false!!
 						console.log("ERROR: " + expre.eloc+ ": Type-Check: self dispatch error bad formals!!");
 						process.exit();
@@ -1269,6 +1404,9 @@ function tcheckExp(expre, classname, objsym, metsym){
 				}
 			}
 			else{
+				// console.log("line number", expre.eloc);
+				// console.log("the passed in things",expre.ekind.eid.name);
+				// console.log("formal params, inc ret type", theMethod.length);
 				console.log("ERROR: " + expre.eloc+ ": Type-Check: self dispatch error yo");
 				process.exit();
 			}
@@ -1276,46 +1414,56 @@ function tcheckExp(expre, classname, objsym, metsym){
 			expre.ekind.rettype = finalOne;
 			break;
 		case "let":
-			var t0 = expre.ekind.letlist[0].atype.name;
 			var t2 = "";
+			var thingsleton = [];
 
 			// console.log(exprse.ekind.letlist[0]);
-			if( expre.ekind.letlist[0].exp == 'undefined' || expre.ekind.letlist[0].exp== ""){
-				// console.log("let w/ no larrow expression");
+			for(var i = 0; i < expre.ekind.letlist.length; i++){
+				if( expre.ekind.letlist[i].exp == 'undefined' || expre.ekind.letlist[i].exp== ""){
+					var t0 = expre.ekind.letlist[i].atype.name;
 
-				// console.log(objsym.find(classname).print(), "class:", t0);
-				objsym.find(classname).add(expre.ekind.letlist[0].id.name, t0);
-				// console.log(objsym.find(classname).print());
-				tcheckExp(expre.ekind.inexp, classname, objsym, metsym);
-				t2 = expre.ekind.inexp.ekind.rettype;
-				objsym.find(classname).remove(expre.ekind.letlist[0].id.name);
-			}
-			else{
-				tcheckExp(expre.ekind.letlist[0].exp, classname, objsym, metsym);
-				var t1 = expre.ekind.letlist[0].exp.ekind.rettype;
-
-				if(t1 == "SELF_TYPE"){
-					if(checkInherit(t0, t1)){
-						// t0 = "SELF_TYPE";
-					}
-					else{
-						console.log("ERROR: " + expre.eloc+ ": Type-Check: self type let error");
-						process.exit();
-					}
-				}else{
-					// t0 = t0;
-				}
-
-				if(checkInherit(t0, t1)){
-					objsym.find(t0).add(expre.ekind.letlist[0].id.name, t0);
-					tcheckExp(expre.ekind.inexp, classname, objsym, metsym);
-					t2 = expre.ekind.inexp.ekind.rettype;
-					objsym.find(t0).remove(expre.ekind.letlist[0].id.name);
+					objsym.find(classname).add(expre.ekind.letlist[i].id.name, t0);
+					// console.log("first push", expre.ekind.letlist[i].id.name, "; type: ", t0);
+					thingsleton.push(expre.ekind.letlist[i].id.name);
 				}
 				else{
-					console.log("ERROR: " + expre.eloc+ ": Type-Check: let expression error yo t0, t1");
-					process.exit();
+					// it has AN attached exp
+					var t0 = expre.ekind.letlist[i].atype.name;
+
+					tcheckExp(expre.ekind.letlist[i].exp, classname, objsym, metsym);
+					var t1 = expre.ekind.letlist[i].exp.ekind.rettype;
+					// console.log("t1",t1);
+
+					if(t1 == "SELF_TYPE"){
+						if(checkInherit(t0, t1)){
+							// t0 = "SELF_TYPE";
+						}
+						else{
+							console.log("ERROR: " + expre.eloc+ ": Type-Check: self type let error");
+							process.exit();
+						}
+					}else{
+						// t0 = t0;
+					}
+					if(checkInherit(t0, t1)){
+						objsym.find(classname).add(expre.ekind.letlist[i].id.name, t0);
+						thingsleton.push(expre.ekind.letlist[i].id.name);
+					}
+					else{
+						// console.log("t0", t0);
+						// console.log("t1", t1);
+						console.log("ERROR: " + expre.eloc+ ": Type-Check: let expression error yo t0, t1");
+						process.exit();
+					}
 				}
+			}
+
+			tcheckExp(expre.ekind.inexp, classname, objsym, metsym);
+			t2 = expre.ekind.inexp.ekind.rettype;
+			// console.log("t2", t2);
+
+			for(var i = 0; i < expre.ekind.letlist.length; i++){
+					objsym.find(classname).remove(thingsleton[i])
 			}
 
 			expre.ekind.rettype = t2;
@@ -1326,14 +1474,29 @@ function tcheckExp(expre, classname, objsym, metsym){
 			// console.log(expre.ekind.exp.e
 				// kind);
 				// console.log(checkInherit(expre.ekind.dtype.name, eo));
+				// console.log("method table: ", metsym.find(expre.ekind.dtype.name).print());
 			if(checkInherit(expre.ekind.dtype.name, eo)){
 				var theMethod = metsym.find(expre.ekind.dtype.name).find(expre.ekind.did.name);
-				var finalOne = theMethod.pop();
+				// console.log("classname", expre.ekind.dtype.name);
+				// console.log("expre",expre.ekind.did.name);
+				if(theMethod == "I didn't find anything master"){
+					console.log("ERROR: " + expre.eloc+ ": Type-Check: static dispatch error not existing!!");
+					process.exit();
 
-				if(expre.ekind.arglist.length == theMethod.length){
-					for(var q = 0; q < theMethod.length; q++){
-						if(!checkInherit(theMethod[q], expre.ekind.arglist[q])){
+				}
+				var finalOne = theMethod[theMethod.length - 1];
+
+				if(expre.ekind.arglist.length == theMethod.length-1){
+					for(var q = 0; q < theMethod.length-1; q++){
+						tcheckExp(expre.ekind.arglist[q], classname, objsym, metsym);
+
+						if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)){
 							// it is false!!
+							console.log("the method",theMethod[q]);
+							console.log("the child",expre.ekind.arglist[q]
+
+						);
+
 							console.log("ERROR: " + expre.eloc+ ": Type-Check: static dispatch error bad formals!!");
 							process.exit();
 						}
@@ -1377,7 +1540,11 @@ function tcheckMeth(mymeth, classname, objsym, metsym){
 	tcheckExp(mymeth.mbody, classname, objsym, metsym);
 	var actualRet = mymeth.mbody.ekind.rettype;
 
+	// console.log("s", supposedRet);
+	// console.log("a", actualRet);
+
 	if(!checkInherit(supposedRet, actualRet)){
+		console.log(mymeth.mbody);
 		console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
 		console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
 	}
@@ -1388,6 +1555,7 @@ function tcheckMeth(mymeth, classname, objsym, metsym){
 	//pop off method parameters
 	return true;
 }
+
 function tcheckAtt(myatt, classname, objsym, metsym){
 	var aname = myatt.fname.name;
 
@@ -1460,7 +1628,11 @@ for(ind in all_classes){
 			}
 			methformals.push(myClass.method[i].mtype.name);
 			msym.find(clname).add(myClass.method[i].mname.name, methformals);
+
 		}
+
+		// console.log(clname, msym.find(clname).print());
+
 //		console.log(osym.find(clname).print(), clname);
 //		console.log(msym.find(clname).print(), clname);
 
@@ -1501,6 +1673,10 @@ for(ind in all_classes){
 }
 
 
+
+//
+
+
 //console.log(msym.print());
 
 
@@ -1532,7 +1708,7 @@ writeFirst("");
   		var indof = user_classes.indexOf(all_classes[ind]);
   		write(userClasses[indof].attrib.length + "\n");
   		for(var i = 0; i < userClasses[indof].attrib.length; i++){
- 
+
   			if( userClasses[indof].attrib[i].finit != ""){
   				write("initializer\n"+ userClasses[indof].attrib[i].fname.name + "\n" +  userClasses[indof].attrib[i].ftype.name + "\n");
   				output_exp(userClasses[indof].attrib[i].finit, true);
@@ -1620,15 +1796,20 @@ for(ind in all_classes){
 			// write the number of formals and then the actual formal names
 			write(userClasses[indof].method[i].mname.name + "\n");
 			write(userClasses[indof].method[i].formals.length + "\n");
+
 			for(var q = 0; q < userClasses[indof].method[i].formals.length; q++){
 				write(userClasses[indof].method[i].formals[q].fname.name + "\n");
 			}
 			//Check if this is an internal methid
+			// console.log("I am looping through class: "+ userClasses[indof].cname.name);
+			// console.log("the method is from", userClasses[indof].method[i].definition);
 			if (check(userClasses[indof].method[i].definition, base_classes)){
 				var internalmeth = userClasses[indof].method[i];
 				// write(internalmeth.mname.name + "\n");
 				// write(internalmeth.formals.length + "\n");
 //				console.log("internal: ",userClasses[indof].method[i].definition);
+				// console.log("internal func",internalmeth.mname.name
+
 				write(internalmeth.definition + "\n");
 				write(internalmeth.mbody.eloc + "\n");
 				write(internalmeth.mtype.name + "\n");
@@ -1639,9 +1820,12 @@ for(ind in all_classes){
 			}
 			// this is not an internal method, so do other stuff
 			else{
-				// console.log(userClasses[indof].method[i]);
+				// console.log(userClasses[indof].cname.name);
 				// write(userClasses[indof].method[i].mtype.name);
-				write(userClasses[indof].cname.name + "\n");
+
+				// console.log("userdefined method name",userClasses[indof].method[i].mname.name);
+
+				write(userClasses[indof].method[i].definition + "\n");
 				output_exp(userClasses[indof].method[i].mbody, true);
 					//<<do stuff>>
 
@@ -1674,7 +1858,7 @@ for(ind in all_classes){
   		if(userClasses[indof].inherit == ""){
   			// it inherits nothing
   			write("Object\n");
- 
+
   		}
   		else{
   			write(userClasses[indof].inherit.name +"\n");
@@ -1689,13 +1873,13 @@ for(ind in all_classes){
 function outputID(identifier){
 	write(identifier.loc+ "\n");
 	write(identifier.name + "\n");
-	
+
 }
 
 write(user_classes.length + "\n");
 for(ind in user_classes){
 	 var thisClass = userClasses[ind];
-	
+
 	 outputID(thisClass.cname);
 	if(thisClass.inherit != ""){
 		write("inherits\n");
@@ -1704,11 +1888,11 @@ for(ind in user_classes){
 	else{
 		write("no_inherits\n");
 	}
- 	
+
 	write(thisClass.features.length + "\n");
 	for(var i = 0; i < thisClass.features.length; i++){
 		var myFeat = thisClass.features[i];
-		
+
 		if(myFeat.fmeth == "Attribute"){
 			if(myFeat.finit == ""){
 				write("attribute_no_init\n");
@@ -1738,7 +1922,7 @@ for(ind in user_classes){
 			console.log("impossible yo");
 		}
 	}
-	 
+
  }
 
 

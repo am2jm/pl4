@@ -12,7 +12,7 @@ class Sally inherits Silly {};
 
 class Main inherits IO {
 	var : Object <- 345;
-	x : Object <-      (let q : String <- (new Sally).copy(), w: String <- "hello", o: String <- "7" in
+	x : Object <-      (let q : Int <- 6, w: String <- "hello", o: String <- "7" in
 	 {
 	 	w;
 		o;

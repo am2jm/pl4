@@ -110,8 +110,8 @@ class C inherits B {
 
 };
 
-class D inherits B {  
-		
+class D inherits B {
+
    method7(num : Int) : Bool {  -- divisible by 3
       (let x : Int <- num in
             if x < 0 then method7(~x) else
@@ -192,7 +192,7 @@ class A2I {
    a2i converts an ASCII string into an integer.  The empty string
 is converted to 0.  Signed and unsigned strings are handled.  The
 method aborts if the string does not represent an integer.  Very
-long strings of digits produce strange answers because of arithmetic 
+long strings of digits produce strange answers because of arithmetic
 overflow.
 
 *)
@@ -209,8 +209,8 @@ overflow.
 
 
      a2i_aux(s : String) : Int {
-	(let int : Int <- 0 in	
-           {	
+	(let int : Int <- 0 in
+           {
                (let j : Int <- s.length() in
 	          (let i : Int <- 0 in
 		    while i < j loop
@@ -226,20 +226,20 @@ overflow.
         )
      };
 
-(* i2a converts an integer to a string.  Positive and negative 
+(* i2a converts an integer to a string.  Positive and negative
    numbers are handled correctly.  *)
 
     i2a(i : Int) : String {
-	if i = 0 then "0" else 
+	if i = 0 then "0" else
         if 0 < i then i2a_aux(i) else
-          "-".concat(i2a_aux(i * ~1)) 
+          "-".concat(i2a_aux(i * ~1))
         fi fi
     };
-	
-(* i2a_aux is an example using recursion.  *)		
+
+(* i2a_aux is an example using recursion.  *)
 
     i2a_aux(i : Int) : String {
-        if i = 0 then "" else 
+        if i = 0 then "" else
 	    (let next : Int <- i / 10 in
 		i2a_aux(next).concat(i2c(i - next * 10))
 	    )
@@ -249,9 +249,9 @@ overflow.
 };
 
 class Main inherits IO {
-   
+
    char : String;
-   avar : A; 
+   avar : A;
    a_var : A;
    flag : Bool <- true;
 
@@ -326,7 +326,7 @@ class Main inherits IO {
 	 o : Object => out_string("Oooops\n");
       esac
    };
- 
+
    print(var : A) : SELF_TYPE {
      (let z : A2I <- new A2I in
 	{
@@ -392,7 +392,7 @@ class Main inherits IO {
 	                    out_string("is not divisible by 3.\n");
 			 }
 		      fi else
-                  if char = "h" then 
+                  if char = "h" then
 		      (let x : A in
 			 {
 		            x <- (new E).method6(avar.value());
@@ -412,7 +412,7 @@ class Main inherits IO {
 			       }
                             ); -- end let r:
 			    avar <- x;
-		         } 
+		         }
 		      )  -- end let x:
 		      else
                   if char = "j" then avar <- (new A)
@@ -427,4 +427,3 @@ class Main inherits IO {
    };
 
 };
-
