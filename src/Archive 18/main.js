@@ -1357,9 +1357,6 @@ function tcheckExp(expre, classname, objsym, metsym){
 
 					if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)){
 						// it is false!!
-						console.log("rettype",expre.ekind.arglist[q].ekind.rettype);
-						console.log("method",theMethod[q]);
-
 						console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error bad formals!!");
 						process.exit();
 					}

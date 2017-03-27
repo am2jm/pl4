@@ -13,7 +13,7 @@ mkdir output
 # diff output/"$filename.cl-type" ref/"$filename.cl-type"
 # done
 
-filename="cells"
+filename="list"
 echo "file: $filename"
 ./cool hard_files/"$filename.cl" --type --out output/$filename
 ./cool hard_files/"$filename.cl" --parse --out ref/$filename

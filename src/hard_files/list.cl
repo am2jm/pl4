@@ -115,7 +115,7 @@ class Main inherits IO {
    };
 
    -- Note how the dynamic dispatch mechanism is responsible to end
-   -- the while loop. As long as mylist is bound to an object of 
+   -- the while loop. As long as mylist is bound to an object of
    -- dynamic type Cons, the dispatch to isNil calls the isNil method of
    -- the Cons class, which returns false. However when we reach the
    -- end of the list, mylist gets bound to the object that was
@@ -136,6 +136,3 @@ class Main inherits IO {
    };
 
 };
-
-
-
