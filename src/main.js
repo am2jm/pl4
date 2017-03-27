@@ -518,7 +518,12 @@ function output_exp(expression, typeflag){
 	var exptype = expression.ekind.etype;
 	write("" + expression.eloc + "\n");
 	if(typeflag){
-		write(expression.ekind.rettype + "\n");
+		if(expression.ekind.rettype.substr(0, 9) == "SELF_TYPE"){
+				write("SELF_TYPE\n");
+		}
+		else{
+			write(expression.ekind.rettype + "\n");
+		}
 	}
 	//check every type of expression
 	if(check(exptype, ["integer", "string"])){
@@ -1129,7 +1134,8 @@ function tcheckExp(expre, classname, objsym, metsym){
 				console.log("ERROR: "+ expre.eloc+ ": Type-Check: equals failed typchecking");
 				process.exit();
 			}
-//			console.log("did a thing!", expre.ekind.rettype);
+			// console.log("did a thing!", expre.ekind.rettype);
+			expre.ekind.rettype = "Bool";
 			break;
 		case "isvoid":
 			tcheckExp(expre.ekind.value, classname, objsym, metsym);
@@ -1153,9 +1159,10 @@ function tcheckExp(expre, classname, objsym, metsym){
 			break;
 		case "new":
 			var mytype = expre.ekind.value.name;
+			// console.log(mytype);
 			// This should be the new "Type"
-			if( mytype == "SELF_TYPE"){
-				expre.ekind.rettype = "SELF_TYPE";
+			if( mytype.substr(0, 9) == "SELF_TYPE"){
+				expre.ekind.rettype = "SELF_TYPE|" + classname;
 				//TODO: SELF_TYPE STUFFFF
 				// ^^^^
 			}
@@ -1189,7 +1196,9 @@ function tcheckExp(expre, classname, objsym, metsym){
 	case "identifier":
 			// expre.rettype = "String";
 			if(expre.ekind.name == "self"){
-				expre.ekind.rettype = "SELF_TYPE";
+				expre.ekind.rettype = "SELF_TYPE|" + classname;
+				// console.log(expre.eloc, "my thing", expre.ekind.rettype);
+				// expre.ekind.;
 				break;
 			}
 			// console.log(objsym.find(classname).find(expre.ekind.name));
@@ -1220,22 +1229,22 @@ function tcheckExp(expre, classname, objsym, metsym){
 
 
 			var condi = expre.ekind.cond.ekind.rettype;
-
-
-			// console.log("condi: ",condi);
-			// console.log("t2: ",t2);
-			// console.log("t3: ",
-			// t3);
-
-
-			if(condi != "Bool"){
-				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
-				process.exit();
-			}
 			tcheckExp(expre.ekind.itrue, classname, objsym, metsym);
 			tcheckExp(expre.ekind.ifalse, classname, objsym, metsym);
 			var t2 = expre.ekind.itrue.ekind.rettype;
 			var t3 = expre.ekind.ifalse.ekind.rettype;
+
+			// console.log("condi: ",expre.ekind.cond.ekind);
+
+
+
+			if(condi != "Bool"){
+				// console.log(condi, "condi");
+				console.log("ERROR: "+ expre.ekind.cond.eloc+ ": Type-Check: if condition not Booleantype");
+				process.exit();
+			}
+			// console.log("t2: ",t2);
+			// console.log("t3: ",t3);
 			var lCA = leastCommonAncestor(t2, t3);
 			// console.log(lCA, " from the if statement");
 			expre.ekind.rettype = lCA;
@@ -1294,7 +1303,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 				// 	}
 				// }
 
-				if(expre.ekind.action[q].atype.name == "SELF_TYPE"){
+				if(expre.ekind.action[q].atype.name.substr(0, 9) == "SELF_TYPE"){
 					console.log("ERROR: "+ expre.ekind.action[q].atype.loc + ": Type-Check: self-type as a branch of case");
 					process.exit();
 				}
@@ -1330,8 +1339,18 @@ function tcheckExp(expre, classname, objsym, metsym){
 			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
 			var t0 = expre.ekind.exp.ekind.rettype;
 			var theMethod;
-			if(t0 == "SELF_TYPE"){
-				theMethod = metsym.find(classname).find(expre.ekind.did.name);
+
+			// console.log(expre.eloc, "doot", expre.ekind.exp.ekind);
+			if(t0.substr(0, 9) == "SELF_TYPE"){
+				var thistype = t0.substr(10, t0.length);
+				// console.log(expre.eloc, "am selfff", myclass);
+				if(thistype.length <= 0 ){
+					theMethod = metsym.find(classname).find(expre.ekind.did.name);
+
+				}else{
+					theMethod = metsym.find(thistype).find(expre.ekind.did.name);
+				}
+
 			}
 			else{
 				theMethod = metsym.find(t0).find(expre.ekind.did.name);
@@ -1353,10 +1372,22 @@ function tcheckExp(expre, classname, objsym, metsym){
 				for(var q = 0; q < theMethod.length-1; q++){
 					// console.log(theMethod[q], "the method");
 					// console.log(expre.ekind.arglist[q], "the method");
-					tcheckExp(expre.ekind.arglist[q], classname, objsym, metsym);
 
-					if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)){
+					tcheckExp(expre.ekind.arglist[q], classname, objsym, metsym);
+					var ret = expre.ekind.arglist[q].ekind.rettype;
+
+					if(ret.substr(0,9)=="SELF_TYPE"){
+						var length = ret.length;
+							if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype.substr(10, length))){
+								console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error bad formals!!");
+								process.exit();
+						}
+					}
+					else if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)){
 						// it is false!!
+						// console.log(theMethod[q], "the method");
+						// console.log( expre.ekind.arglist[q].ekind.rettype, "the rettype");
+
 						console.log("ERROR: " + expre.eloc+ ": Type-Check: dynamic dispatch error bad formals!!");
 						process.exit();
 					}
@@ -1369,6 +1400,7 @@ function tcheckExp(expre, classname, objsym, metsym){
 			// SO FAR OK!!!
 			if(finalOne == "SELF_TYPE"){
 				expre.ekind.rettype = t0;
+
 			}
 			else{
 				expre.ekind.rettype = finalOne;
@@ -1419,16 +1451,26 @@ function tcheckExp(expre, classname, objsym, metsym){
 
 			// console.log(exprse.ekind.letlist[0]);
 			for(var i = 0; i < expre.ekind.letlist.length; i++){
+
+				//no init let binding
 				if( expre.ekind.letlist[i].exp == 'undefined' || expre.ekind.letlist[i].exp== ""){
+
 					var t0 = expre.ekind.letlist[i].atype.name;
+					if(t0 == "SELF_TYPE"){
+						t0 = "SELF_TYPE|"+ classname;
+					}
 
 					objsym.find(classname).add(expre.ekind.letlist[i].id.name, t0);
 					// console.log("first push", expre.ekind.letlist[i].id.name, "; type: ", t0);
 					thingsleton.push(expre.ekind.letlist[i].id.name);
 				}
+				//init let
 				else{
 					// it has AN attached exp
 					var t0 = expre.ekind.letlist[i].atype.name;
+					if(t0 == "SELF_TYPE"){
+						t0 = "SELF_TYPE|"+ classname;
+					}
 
 					tcheckExp(expre.ekind.letlist[i].exp, classname, objsym, metsym);
 					var t1 = expre.ekind.letlist[i].exp.ekind.rettype;
@@ -1540,13 +1582,36 @@ function tcheckMeth(mymeth, classname, objsym, metsym){
 	tcheckExp(mymeth.mbody, classname, objsym, metsym);
 	var actualRet = mymeth.mbody.ekind.rettype;
 
-	// console.log("s", supposedRet);
-	// console.log("a", actualRet);
+	// console.log("s", supposedRet.substr(0, 9));
+	// console.log("a", actualRet.substr(0, 9)q);
 
-	if(!checkInherit(supposedRet, actualRet)){
-		console.log(mymeth.mbody);
+	if(actualRet.substr(0, 9) == "SELF_TYPE"){
+		// then supposedRet MIGHT be self type
+		// and it might be not self-type
+		if(supposedRet.substr(0, 9) == "SELF_TYPE"){
+			// console.log("s", supposedRet);
+			// console.log("a", actualRet);
+			// if(!checkInherit(supposedRet.substr(10, supposedRet.length), actualRet.substr(10, actualRet.length))){
+			// 	// console.log(mymeth.mbody);
+			// 	console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue both self-type!");
+			// 	// console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
+			// }
+		}
+		else{
+			// in the case actual is SELF and supposed is not
+			// var aleng = actualRet.length;
+			if(!checkInherit(supposedRet, actualRet.substr(10, actualRet.length))){
+				// console.log(mymeth.mbody);
+				console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue child self-type only!");
+				// console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
+			}
+		}
+
+	}
+	else if(!checkInherit(supposedRet, actualRet)){
+		// console.log(mymeth.mbody);
 		console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
-		console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
+		// console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
 	}
 	// mymeth.rettype = supposedRet;
 	for(var q = 0; q < mymeth.formals.length; q++){
