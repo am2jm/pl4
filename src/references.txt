@@ -4,5 +4,8 @@
 --Cool Documentation
 3.) TA OH
 --specific bugs and clarification
-4.) https://www.youtube.com/watch?v=Wa9zMygcv_M&feature=youtu.be
---Weimer's video: used to get started
+-- help with how to structure our code (Read in, T-Check, Output)
+4.) https://www.youtube.com/watch?v=2CMhLddBt1M&feature=youtu.be
+https://www.youtube.com/watch?v=Wa9zMygcv_M&feature=youtu.be
+https://www.youtube.com/watch?v=Oxpgrkmsxhg&feature=youtu.be
+--Weimer's videos: used to get started on all of the different parts
