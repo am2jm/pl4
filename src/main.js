@@ -1190,10 +1190,17 @@ function tcheckExp(expre, classname, objsym, metsym) {
             }
 
             // have a list of types, find the final LUB to return
-            var basecase = leastCommonAncestor(types[0], types[1]);
-            for (var i = 1; i < types.length; i++) {
-                basecase = leastCommonAncestor(basecase, types[i]);
+            // console.log("types",types);
+            if(types.length ==1){
+              basecase= types[0];
             }
+            else{
+              var basecase = leastCommonAncestor(types[0], types[1]);
+              for (var i = 1; i < types.length; i++) {
+                  basecase = leastCommonAncestor(basecase, types[i]);
+              }
+            }
+
 
 			// and set the return type
             expre.ekind.rettype = basecase;
@@ -1500,14 +1507,18 @@ function tcheckAtt(myatt, classname, objsym, metsym) {
 		tcheckExp(myatt.finit, classname, objsym, metsym);
 
         var bodytype = myatt.finit.ekind.rettype;
-
+        var blen = bodytype.length;
+        if(bodytype.substr(0,9)=="SELF_TYPE"){
+          bodytype= bodytype.substr(10,blen);
+        }
 		// ensure that the type actually returned by the expression is a subtype of the stated type
         if (checkInherit(objsym.find(classname).find(aname), bodytype) || objsym.find(classname).find(aname) == bodytype) {
-
-        } else {
-			// if it's not throw an error
-            console.log("ERROR: " + myatt.finit.eloc + ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
-            process.exit();
+          
+        }
+        else{
+          // if it's not throw an error
+          console.log("ERROR: " + myatt.finit.eloc + ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
+          process.exit();
         }
 
     }
@@ -1937,6 +1948,8 @@ function inheritList(classname, listsofar) {
 function leastCommonAncestor(t1, t2) {
     var l1 = inheritList(t1, []);
     var l2 = inheritList(t2, []);
+    // console.log(l1);
+    // console.log(l2);
 
 	// get an inheritance list for each
     l1 = l1.reverse();
@@ -1948,6 +1961,7 @@ function leastCommonAncestor(t1, t2) {
     for (var i = 0; i < l1.length; i++) {
         for (var j = 0; j < l2.length; j++) {
             if (l1[i] == l2[j]) {
+              // console.log(l1[i]);
                 return l1[i];
             }
         }

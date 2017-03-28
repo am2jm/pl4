@@ -1,14 +1,9 @@
-class Silly {
+class Silly inherits Main
+{
 		copy() : SELF_TYPE {self};
 };
 
-
-
-
-
-class Sally inherits Silly {};
-
-
+class Sally inherits Main {};
 
 class Main inherits IO {
 	var : Object <- 345;
@@ -18,7 +13,7 @@ class Main inherits IO {
 		o;
 	 }
       );
-	p : Int <- 2 + 2;
+	p : Main <- new SELF_TYPE;
 	z : Sally <- (new Sally).copy();
 	y : Object <- 999;
 	a : String <- "divya";
