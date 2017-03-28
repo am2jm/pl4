@@ -1267,72 +1267,79 @@ function tcheckExp(expre, classname, objsym, metsym) {
             break;
         case "self_dispatch":
 
+			// get the method specified by the dispatch
             var theMethod = metsym.find(classname).find(expre.ekind.eid.name);
-            // console.log(expre.eloc, theMethod);
-            if (theMethod == "I didn't find anything master") {
+
+			// if the symbol table returns that if found nothing
+			if (theMethod == "I didn't find anything master") {
                 console.log("ERROR: " + expre.eloc + ": Type-Check: self dispatch error not existing!!");
                 process.exit();
 
             }
-            // console.log("arg list: ",expre.ekind.args);
-            var finalOne = theMethod[theMethod.length - 1];
-            // console.log(expre.ekind);
 
+			// set a variable for the actual return type of the method
+			var finalOne = theMethod[theMethod.length - 1];
+
+			// if the formal and passed in paramters do not have the same number of elements
+			// then it's not ok, and error
             if (expre.ekind.args.length == theMethod.length - 1) {
-
-
-
                 for (var q = 0; q < theMethod.length - 1; q++) {
-                    // console.log("parent: ",theMethod[q]);
-                    // console.log("child: ",expre.ekind.args[q]);
+                   
+					// check each arguement passed in
                     tcheckExp(expre.ekind.args[q], classname, objsym, metsym);
+					
+					// if the actual and supposed types are not parent and child, there is an error
                     if (!checkInherit(theMethod[q], expre.ekind.args[q].ekind.rettype)) {
-                        // it is false!!
                         console.log("ERROR: " + expre.eloc + ": Type-Check: self dispatch error bad formals!!");
                         process.exit();
                     }
                 }
             } else {
-                // console.log("line number", expre.eloc);
-                // console.log("the passed in things",expre.ekind.eid.name);
-                // console.log("formal params, inc ret type", theMethod.length);
                 console.log("ERROR: " + expre.eloc + ": Type-Check: self dispatch error yo");
                 process.exit();
             }
-            // SO FAR OK!!!
-            expre.ekind.rettype = finalOne;
+
+			// if it's gotten this far it's ok, set the return type to the specified return type
+			expre.ekind.rettype = finalOne;
             break;
         case "let":
+			// t2 is the final return type of the let
+			// thingsleton will be a list of the identifiers pushed onto the object symbol table
             var t2 = "";
             var thingsleton = [];
 
-            // console.log(exprse.ekind.letlist[0]);
+            // for each item of the stringed together let, check stuff
+			// will only run once if there is only one item
             for (var i = 0; i < expre.ekind.letlist.length; i++) {
 
                 //no init let binding
                 if (expre.ekind.letlist[i].exp == 'undefined' || expre.ekind.letlist[i].exp == "") {
 
+					// if it's defined type is SELF_TYPE, handle it
+					//  by giving the SELF_TYPE a subtype_C -> SELF_TYPE|SUBC
                     var t0 = expre.ekind.letlist[i].atype.name;
                     if (t0 == "SELF_TYPE") {
                         t0 = "SELF_TYPE|" + classname;
                     }
 
+					// then push this onto the object symbol table
+					// and add the name to a list of the names so we know later
                     objsym.find(classname).add(expre.ekind.letlist[i].id.name, t0);
-                    // console.log("first push", expre.ekind.letlist[i].id.name, "; type: ", t0);
                     thingsleton.push(expre.ekind.letlist[i].id.name);
                 }
-                //init let
+                //init let therefore it has AN attached exp
                 else {
-                    // it has AN attached exp
+                    // store the stated return type, and handle if it's SELF_TYPE
                     var t0 = expre.ekind.letlist[i].atype.name;
                     if (t0 == "SELF_TYPE") {
                         t0 = "SELF_TYPE|" + classname;
                     }
 
+					// typecheck said attached expression, store this into t1
                     tcheckExp(expre.ekind.letlist[i].exp, classname, objsym, metsym);
                     var t1 = expre.ekind.letlist[i].exp.ekind.rettype;
-                    // console.log("t1",t1);
 
+					// if the expression returns SELF_TYPE, ensure it inherits correctly from the suppsoed return type
                     if (t1 == "SELF_TYPE") {
                         if (checkInherit(t0, t1)) {
                             // t0 = "SELF_TYPE";
@@ -1340,87 +1347,92 @@ function tcheckExp(expre, classname, objsym, metsym) {
                             console.log("ERROR: " + expre.eloc + ": Type-Check: self type let error");
                             process.exit();
                         }
-                    } else {
-                        // t0 = t0;
-                    }
+                    } 
+                      
+					// otherwise, or if there were no other errors, check their inheritance stance
                     if (checkInherit(t0, t1)) {
+						
+						// if the inheritance is ok, push it onto the symbol table and make note of t
                         objsym.find(classname).add(expre.ekind.letlist[i].id.name, t0);
                         thingsleton.push(expre.ekind.letlist[i].id.name);
                     } else {
-                        // console.log("t0", t0);
-                        // console.log("t1", t1);
+                        // else, error
                         console.log("ERROR: " + expre.eloc + ": Type-Check: let expression error yo t0, t1");
                         process.exit();
                     }
                 }
             }
 
+			// after all the lets have been pushed on, typecheck the "in exp" expression
+			// store this return type in t2
             tcheckExp(expre.ekind.inexp, classname, objsym, metsym);
             t2 = expre.ekind.inexp.ekind.rettype;
-            // console.log("t2", t2);
-
+            
+			// remove all of the objects pushed onto the object symbol table
             for (var i = 0; i < expre.ekind.letlist.length; i++) {
                 objsym.find(classname).remove(thingsleton[i])
             }
-
+			
+			// and set the final return type!
             expre.ekind.rettype = t2;
             break;
         case "static_dispatch":
+			//typecheck the expression that this is called on and store the return type in eo
             tcheckExp(expre.ekind.exp, classname, objsym, metsym);
             var eo = expre.ekind.exp.ekind.rettype;
-            // console.log(expre.ekind.exp.e
-            // kind);
-            // console.log(checkInherit(expre.ekind.dtype.name, eo));
-            // console.log("method table: ", metsym.find(expre.ekind.dtype.name).print());
+			
+			// check if eo is valid given the type passed in as what should be called
             if (checkInherit(expre.ekind.dtype.name, eo)) {
                 var theMethod = metsym.find(expre.ekind.dtype.name).find(expre.ekind.did.name);
-                // console.log("classname", expre.ekind.dtype.name);
-                // console.log("expre",expre.ekind.did.name);
+                
+				// if there was no method to be called in the method symbol table
                 if (theMethod == "I didn't find anything master") {
                     console.log("ERROR: " + expre.eloc + ": Type-Check: static dispatch error not existing!!");
                     process.exit();
-
                 }
+				
+				// store the supposed return type
                 var finalOne = theMethod[theMethod.length - 1];
 
+				// check all of the formals
                 if (expre.ekind.arglist.length == theMethod.length - 1) {
                     for (var q = 0; q < theMethod.length - 1; q++) {
+						
+						// check the expression of the argument passed in
                         tcheckExp(expre.ekind.arglist[q], classname, objsym, metsym);
 
+						// if it's return type is not a vlid subtype of what it says is being passed in
+						// there is an error with the formals
                         if (!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)) {
-                            // it is false!!
-                            console.log("the method", theMethod[q]);
-                            console.log("the child", expre.ekind.arglist[q]
-
-                            );
-
                             console.log("ERROR: " + expre.eloc + ": Type-Check: static dispatch error bad formals!!");
                             process.exit();
                         }
                     }
-                } else {
+                }
+				// if check, there are the wrong number of parameters for the method called
+				else {
                     console.log("ERROR: " + expre.eloc + ": Type-Check: static dispatch error wrong # params");
                     process.exit();
                 }
-            } else {
-                // console.log(eo, ":child type, parent:", expre.ekind.dtype.name);
+            } 
+			// static dispatch error, the eo and T0 put in are incompatible
+			else {
                 console.log("ERROR: " + expre.eloc + ": Type-Check: static dispatch error yo");
                 process.exit();
             }
+			
+			// if the specified return type is SELF_TYPE, retur e0, otherwise set it to the expected return type
             if (finalOne == "SELF_TYPE") {
                 expre.ekind.rettype = e0;
             } else {
                 expre.ekind.rettype = finalOne;
             }
+			
             break;
         default:
-            // console.log("enter default", expid);
+            // sanity check, this should never happen
             expre.rettype = "DIVYA DON'T COMMENT ME OUT";
-
-
     }
-    //	console.log(expre);
-    //	return expre;
 }
 
 //checking methods, a method, classname, object and method symbol tree are being passed in
