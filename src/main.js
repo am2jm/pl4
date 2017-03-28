@@ -1085,6 +1085,7 @@ function tcheckExp(expre, classname, objsym, metsym) {
                 break;
             }
 						//otherwise make sure the variable exists/ is in scope
+            // console.log("ident", objsym.find(classname));
             if (objsym.find(classname).find(expre.ekind.name) != "I didn't find anything master") {
                 expre.ekind.rettype = objsym.find(classname).find(expre.ekind.name);
             } else {
@@ -1109,7 +1110,7 @@ function tcheckExp(expre, classname, objsym, metsym) {
 
 			// if the condition is not a boolean it's pointless to continue
             if (condi != "Bool") {
-                console.log("ERROR: " + expre.ekind.cond.eloc + ": Type-Check: if condition not Booleantype");
+                console.log("ERROR: " + expre.eloc + ": Type-Check: if condition not Booleantype");
                 process.exit();
             }
 
@@ -1132,6 +1133,7 @@ function tcheckExp(expre, classname, objsym, metsym) {
             }
 
 			// set the return type to the variable we setup in the beginning
+      // console.log("ret type: ",expre.ekind);
             expre.ekind.rettype = last_type;
             break;
         case "while":
@@ -1372,8 +1374,15 @@ function tcheckExp(expre, classname, objsym, metsym) {
                         thingsleton.push(expre.ekind.letlist[i].id.name);
                     } else {
                         // else, error
-                        console.log("ERROR: " + expre.eloc + ": Type-Check: let expression error yo t0, t1");
-                        process.exit();
+
+                        var t1len = t1.length;
+                        if(!checkInherit(t0, t1.substr(10,t1len))){
+                        //  console.log(t0, t1.substr(10, t1len));
+                         console.log("ERROR: " + expre.eloc + ": Type-Check: let expression error yo t0, t1");
+                         process.exit();
+                       }
+                        // console.log("ERROR: " + expre.eloc + ": Type-Check: let expression error yo t0, t1");
+                        // process.exit();
                     }
                 }
             }
@@ -1465,6 +1474,7 @@ function tcheckMeth(mymeth, classname, objsym, metsym) {
 
 
 	// check if the actual return type of the body was self-type
+  // console.log("actual ret",mymeth.mbody.ekind);
     if (actualRet.substr(0, 9) == "SELF_TYPE") {
         // then supposedRet MIGHT be self type
         // and it might be not self-type
@@ -1477,6 +1487,7 @@ function tcheckMeth(mymeth, classname, objsym, metsym) {
 
 			if (!checkInherit(supposedRet, actualRet.substr(10, actualRet.length))) {
                 console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue child self-type only!");
+                process.exit();
             }
         }
 
@@ -1484,6 +1495,8 @@ function tcheckMeth(mymeth, classname, objsym, metsym) {
 	// otherwise just check if they're substypes
 	else if (!checkInherit(supposedRet, actualRet)) {
         console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
+        process.exit();
+
     }
 
 	// pop off method parameters from the object symbol table
@@ -1509,15 +1522,21 @@ function tcheckAtt(myatt, classname, objsym, metsym) {
         var bodytype = myatt.finit.ekind.rettype;
         var blen = bodytype.length;
         if(bodytype.substr(0,9)=="SELF_TYPE"){
-          bodytype= bodytype.substr(10,blen);
+          if(objsym.find(classname).find(aname)=="SELF_TYPE"){
+            bodytype = "SELF_TYPE";
+          }
+          else{
+            bodytype= bodytype.substr(10,blen);
+
+          }
         }
 		// ensure that the type actually returned by the expression is a subtype of the stated type
         if (checkInherit(objsym.find(classname).find(aname), bodytype) || objsym.find(classname).find(aname) == bodytype) {
-          
+
         }
         else{
           // if it's not throw an error
-          console.log("ERROR: " + myatt.finit.eloc + ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
+          console.log("ERROR: " + myatt.fname.loc + ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
           process.exit();
         }
 
@@ -1541,9 +1560,6 @@ function tcheckClass(mclass, classname, objsym, metsym) {
     }
 
 }
-
-// sort the classes sometime before they get output
-all_classes.sort();
 
 // set up two symbol tables, one for all the objecs and one for the methods
 var osym = new symboltable.SymbolTable();
@@ -1626,7 +1642,8 @@ for (ind in all_classes) {
 
 
 //----------------------- SECTION 8: Create File to Print: Class Map, Imp Map, Parent Map, AST
-
+// sort the classes sometime before they get output
+all_classes.sort();
 // setupt the files to be printed to
 writeFirst("");
 
@@ -1877,7 +1894,6 @@ for (ind in user_classes) {
             output_exp(myFeat.mbody, true);
         } else {
 			// sanity check, if it's neither attribute nor method it's impossible
-            console.log("impossible yo");
         }
     }
 }

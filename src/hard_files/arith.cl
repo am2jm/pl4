@@ -91,12 +91,14 @@ class B inherits A {  -- B is a number squared
 class C inherits B {
 
    method6(num : Int) : A { -- negate
-      (let x : Int in
+   {
+      (let p : Int in
          {
-            x <- ~num;
-	    (new A).set_var(x);
+	    (new A).set_var(var);
          }
-      )
+      );
+      p;
+      }
    };
 
    method5(num : Int) : E {  -- cube
