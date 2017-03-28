@@ -1085,155 +1085,158 @@ function tcheckExp(expre, classname, objsym, metsym) {
             }
             break;
         case "if":
-            tcheckExp(expre.ekind.cond, classname, objsym, metsym);
+            			// typechecking the condition expression of the if e then e else e fi
+			tcheckExp(expre.ekind.cond, classname, objsym, metsym);
 
-
+			
+			// grabbing the type of the condition for ease of understanding how the program
+			// reflects the typechecing rules
+			// also typechecking the other expressions
             var condi = expre.ekind.cond.ekind.rettype;
             tcheckExp(expre.ekind.itrue, classname, objsym, metsym);
             tcheckExp(expre.ekind.ifalse, classname, objsym, metsym);
             var t2 = expre.ekind.itrue.ekind.rettype;
             var t3 = expre.ekind.ifalse.ekind.rettype;
 
-            // console.log("condi: ",expre.ekind.cond.ekind);
 
-
-
+			// if the condition is not a boolean it's pointless to continue
             if (condi != "Bool") {
-                // console.log(condi, "condi");
                 console.log("ERROR: " + expre.ekind.cond.eloc + ": Type-Check: if condition not Booleantype");
                 process.exit();
             }
-            // console.log("t2: ",t2);
-            // console.log("t3: ",t3);
+			
+			// calling the least-common-ancestor or LUB function
+			// to get the right return type for if
             var lCA = leastCommonAncestor(t2, t3);
-            // console.log(lCA, " from the if statement");
             expre.ekind.rettype = lCA;
 
             break;
         case "block":
+			
+			// setup a variable to store the last type of the expressions in the block
+			// since the return type is just the last type
             var last_type = "";
+			
+			// typecheck all of the expressions in the block
             for (var q = 0; q < expre.ekind.value.length; q++) {
                 tcheckExp(expre.ekind.value[q], classname, objsym, metsym);
                 last_type = expre.ekind.value[q].ekind.rettype;
-                //				console.log(last_type);
             }
+			
+			// set the return type to the variable we setup in the beginning
             expre.ekind.rettype = last_type;
             break;
         case "while":
+			
+			// similar to IF, typecheck the condition expression and store it into a variable
             tcheckExp(expre.ekind.cond, classname, objsym, metsym);
             var condi = expre.ekind.cond.ekind.rettype;
-            // console.log(condi);
-
-            //			var t2 = expre.ekind.value.ekind.rettype;
+            
+			// if the condition is not a boolean, it's pointless to continue
             if (condi != "Bool") {
                 console.log("ERROR: " + expre.ekind.cond.eloc + ": Type-Check: while condition not Booleantype");
                 process.exit();
             }
+			
+			// if there was no problem, typecheck the part that will loop
             tcheckExp(expre.ekind.value, classname, objsym, metsym);
 
+			// as per the typing rules, hardcode the returntype to Object
             expre.ekind.rettype = "Object";
             break;
         case "case":
-            // console.log(expre.ekind.exp);
-            tcheckExp(expre.ekind.exp, classname, objsym, metsym);
+			// typecheck the variable that is being switched upon
+			tcheckExp(expre.ekind.exp, classname, objsym, metsym);
 
+			// create variables to store the types that appear in the case
+			// and the various branches taken by the case statement
+			// 	so that no branch is repeated
             var types = [];
             var branch_types = [];
 
+			// handle each branch of the case
             for (var q = 0; q < expre.ekind.action.length; q++) {
 
+				// if the branch is a repeat have an error message
+				// otherwise push it onto the list of branches that have been seen
                 if (branch_types.indexOf(expre.ekind.action[q].atype.name) == -1) {
                     branch_types.push(expre.ekind.action[q].atype.name);
                 } else {
                     console.log("ERROR: " + expre.ekind.action[q].id.loc + ": Type-Check: repeated branches of case");
                     process.exit();
                 }
-                // if(!(expre.ekind.action[q].id.name in  branches)){
-                // 	branches[expre.ekind.action[q].id.name]= [expre.ekind.action[q].atype.name];
-                // }
-                // else{
-                // 	var temp_types = branches[expre.ekind.action[q].id.name]
-                // 	if(temp_types.indexOf(expre.ekind.action[q].atype.name)==-1){
-                // 		branches[expre.ekind.action[q].id.name].push(expre.ekind.action[q].atype.name);
-                // 	}
-                // 	else{
-                // 		console.log("ERROR: "+ expre.ekind.action[q].id.loc+ ": Type-Check: repeated branches of case");
-                // 			 		process.exit();
-                // 	}
-                // }
-
+               
+				// SELF_TYPE cannot be a branch of case
                 if (expre.ekind.action[q].atype.name.substr(0, 9) == "SELF_TYPE") {
                     console.log("ERROR: " + expre.ekind.action[q].atype.loc + ": Type-Check: self-type as a branch of case");
                     process.exit();
                 }
 
-                // console.log("current case branch", expre.ekind.action[q].id.name);
-                // console.log("current case branch type", expre.ekind.action[q].atype.name);
-
-                // TODO: push onto objsym
+                // push the identifier on the branch onto the object symbol tree so that expression can use it
+				// and typecheck the expression
+				// and store the retun type of the expression
                 objsym.find(classname).add(expre.ekind.action[q].id.name, expre.ekind.action[q].atype.name);
                 tcheckExp(expre.ekind.action[q].exp, classname, objsym, metsym);
                 objsym.find(classname).remove(expre.ekind.action[q].id.name);
                 types.push(expre.ekind.action[q].exp.ekind.rettype);
             }
-            // have a list of types
+			
+            // have a list of types, find the final LUB to return
             var basecase = leastCommonAncestor(types[0], types[1]);
             for (var i = 1; i < types.length; i++) {
                 basecase = leastCommonAncestor(basecase, types[i]);
             }
-            // console.log("case should return", basecase);
-            // console.log("which is:", expre.ekind.exp.ekind.rettype);
-            // if(basecase == "SELF_TYPE"){
-            // 	expre.ekind.rettype = expre.ekind.exp.ekind.rettype;
-            // }
-            // else{
+           	
+			// and set the return type
             expre.ekind.rettype = basecase;
-
-            // }
 
             break;
         case "dynamic_dispatch":
             // type is undefined or null, because it's not static!!
-            // console.log("exp",expre.ekind);
             tcheckExp(expre.ekind.exp, classname, objsym, metsym);
             var t0 = expre.ekind.exp.ekind.rettype;
             var theMethod;
 
-            // console.log(expre.eloc, "doot", expre.ekind.exp.ekind);
+			// following the type checking rules, if t0 is self-type then grab the C
+			// to search that class's method tree for the right method's return types
             if (t0.substr(0, 9) == "SELF_TYPE") {
                 var thistype = t0.substr(10, t0.length);
-                // console.log(expre.eloc, "am selfff", myclass);
                 if (thistype.length <= 0) {
+					// if its just this type we search the current class's tree
                     theMethod = metsym.find(classname).find(expre.ekind.did.name);
 
                 } else {
+					// otherwise search the other class's tree
                     theMethod = metsym.find(thistype).find(expre.ekind.did.name);
                 }
 
             } else {
+				// if it's not self-type, just find the method in t0's tree
                 theMethod = metsym.find(t0).find(expre.ekind.did.name);
             }
+			
+			// Our symbol tree returns this string if the item maps to nothing in the tree
+			// rather than handling the symbol tree throwing anything
             if (theMethod == "I didn't find anything master") {
                 console.log("ERROR: " + expre.eloc + ": Type-Check: dynamic dispatch error not existing!!");
                 process.exit();
 
             }
-            //			console.log(theMethod);
-            var finalOne = theMethod[theMethod.length - 1];
 
-            // console.log(expre.ekind.arglist.length);
-            // console.log(theMethod.length);
-            // console.log(expre.ekind, "expre");
-            // console.log(theMethod, "theMethod");
-            // console.log(metsym.find("D").print());
+			// final actual return type is the last item in the found list
+			var finalOne = theMethod[theMethod.length - 1];
+
+          	// check each of the parameters and typecheck them
+			// and check that aginst the supposed type
+			// if they're not subtypes, then an error
             if (expre.ekind.arglist.length == (theMethod.length - 1)) {
                 for (var q = 0; q < theMethod.length - 1; q++) {
-                    // console.log(theMethod[q], "the method");
-                    // console.log(expre.ekind.arglist[q], "the method");
-
+					
+					// typecheck the argument
                     tcheckExp(expre.ekind.arglist[q], classname, objsym, metsym);
                     var ret = expre.ekind.arglist[q].ekind.rettype;
 
+					// if it's self-type check the "sub_C"
                     if (ret.substr(0, 9) == "SELF_TYPE") {
                         var length = ret.length;
                         if (!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype.substr(10, length))) {
@@ -1241,26 +1244,26 @@ function tcheckExp(expre, classname, objsym, metsym) {
                             process.exit();
                         }
                     } else if (!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)) {
-                        // it is false!!
-                        // console.log(theMethod[q], "the method");
-                        // console.log( expre.ekind.arglist[q].ekind.rettype, "the rettype");
-
+                        
+						// if it's not self-type just check if the classes are subclasses
                         console.log("ERROR: " + expre.eloc + ": Type-Check: dynamic dispatch error bad formals!!");
                         process.exit();
                     }
                 }
             } else {
+				// if the two lists don't have the same length, it can't be a correct method call
                 console.log("ERROR: " + expre.eloc + ": Type-Check: dynamic dispatch error yo");
                 process.exit();
             }
-            // SO FAR OK!!!
-            if (finalOne == "SELF_TYPE") {
+
+			// if the method is supposed to return "SELF_TYPE"
+			// set the rettype to t0, else use the last item in the symbol table's list
+			if (finalOne == "SELF_TYPE") {
                 expre.ekind.rettype = t0;
 
             } else {
                 expre.ekind.rettype = finalOne;
             }
-            //			console.log("whoooo", expre.ekind.rettype);
             break;
         case "self_dispatch":
 
@@ -1420,72 +1423,69 @@ function tcheckExp(expre, classname, objsym, metsym) {
     //	return expre;
 }
 
-//checking methods
+//checking methods, a method, classname, object and method symbol tree are being passed in
 function tcheckMeth(mymeth, classname, objsym, metsym) {
     var supposedRet = mymeth.mtype.name;
-    // add the allowable parameters
+	
+    // add the allowable parameters to the object symbol table
     for (var q = 0; q < mymeth.formals.length; q++) {
         objsym.find(classname).add(mymeth.formals[q].fname.name, mymeth.formals[q].ftype.name);
     }
+	
     // type-checks the body of the expression
     tcheckExp(mymeth.mbody, classname, objsym, metsym);
     var actualRet = mymeth.mbody.ekind.rettype;
 
-    // console.log("s", supposedRet.substr(0, 9));
-    // console.log("a", actualRet.substr(0, 9)q);
-
+    
+	// check if the actual return type of the body was self-type
     if (actualRet.substr(0, 9) == "SELF_TYPE") {
         // then supposedRet MIGHT be self type
         // and it might be not self-type
         if (supposedRet.substr(0, 9) == "SELF_TYPE") {
-            // console.log("s", supposedRet);
-            // console.log("a", actualRet);
-            // if(!checkInherit(supposedRet.substr(10, supposedRet.length), actualRet.substr(10, actualRet.length))){
-            // 	// console.log(mymeth.mbody);
-            // 	console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue both self-type!");
-            // 	// console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
-            // }
+            // if it is self-type everything is ok
+			
         } else {
             // in the case actual is SELF and supposed is not
-            // var aleng = actualRet.length;
-            if (!checkInherit(supposedRet, actualRet.substr(10, actualRet.length))) {
-                // console.log(mymeth.mbody);
+			// need to check if the actual return's sub_C is a subtype of the supposed return type
+			
+			if (!checkInherit(supposedRet, actualRet.substr(10, actualRet.length))) {
                 console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue child self-type only!");
-                // console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
             }
         }
 
-    } else if (!checkInherit(supposedRet, actualRet)) {
-        // console.log(mymeth.mbody);
-        console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
-        // console.log("parent", supposedRet, "child:", actualRet, "in", mymeth.mname.name);
     }
-    // mymeth.rettype = supposedRet;
-    for (var q = 0; q < mymeth.formals.length; q++) {
+	// otherwise just check if they're substypes
+	else if (!checkInherit(supposedRet, actualRet)) {
+        console.log("ERROR: " + mymeth.mname.loc + ": Type-Check: method issue!");
+    }
+
+	// pop off method parameters from the object symbol table
+	for (var q = 0; q < mymeth.formals.length; q++) {
         objsym.find(classname).remove(mymeth.formals[q].fname.name, mymeth.formals[q].ftype.name);
     }
-    //pop off method parameters
-    return true;
 }
 
+// typechecks an atrribute
 function tcheckAtt(myatt, classname, objsym, metsym) {
+	
+	// store the name of the attribute
     var aname = myatt.fname.name;
 
+	// if it is an attribute with no initial value
     if (myatt.finit.length < 1) {
-        //		console.log(myatt);
         myatt.rettype = objsym.find(classname).find(myatt.fname.name);
         // whoo no typechecking to do!
     } else {
-        //		console.log(myatt.finit);
-        tcheckExp(myatt.finit, classname, objsym, metsym);
+		// otherwise typecheck the inital expression
+		tcheckExp(myatt.finit, classname, objsym, metsym);
 
         var bodytype = myatt.finit.ekind.rettype;
-        //		console.log(myatt.finit);
 
+		// ensure that the type actually returned by the expression is a subtype of the stated type
         if (checkInherit(objsym.find(classname).find(aname), bodytype) || objsym.find(classname).find(aname) == bodytype) {
-            // console.log("ok!!!", ob
-            // jsym.find(classname).find(aname));
+            
         } else {
+			// if it's not throw an error
             console.log("ERROR: " + myatt.finit.eloc + ": Type-Check: i!!!!", bodytype, "should be", objsym.find(classname).find(aname));
             process.exit();
         }
@@ -1493,42 +1493,45 @@ function tcheckAtt(myatt, classname, objsym, metsym) {
     }
 }
 
+// type checks an entire class
 function tcheckClass(mclass, classname, objsym, metsym) {
     // I am given a symbol table, and a user-class
     var className = mclass.cname.name;
-    //TODO:
-    // attributes next
-
+   
+	// loop through all of the methods belonging to the class and typecheck them
     for (var i = 0; i < mclass.method.length; i++) {
 
         tcheckMeth(mclass.method[i], classname, objsym, metsym);
     }
+	// loop through all of the attributes and typecheck them too
     for (var i = 0; i < mclass.attrib.length; i++) {
 
         tcheckAtt(mclass.attrib[i], classname, objsym, metsym);
     }
 
-    //	return checkMe;
 }
 
+// sort the classes sometime before they get output
 all_classes.sort();
 
+// set up two symbol tables, one for all the objecs and one for the methods
 var osym = new symboltable.SymbolTable();
 var msym = new symboltable.SymbolTable();
 
+// loop through the classes and add all necessary things to tables
 for (ind in all_classes) {
     var clname = all_classes[ind];
     if (user_classes.indexOf(clname) != -1) {
+		
         // this is a user class
         var indof = user_classes.indexOf(clname);
         var myClass = userClasses[indof];
 
-        //		console.log(myClass);
-
+		// make the table map to a table with the classname as a key
         osym.add(clname, new symboltable.SymbolTable());
         msym.add(clname, new symboltable.SymbolTable());
-
-
+		
+		// actually add values to the table within the table
         for (var i = 0; i < myClass.attrib.length; i++) {
             osym.find(clname).add(myClass.attrib[i].fname.name, myClass.attrib[i].ftype.name);
         }
@@ -1542,80 +1545,79 @@ for (ind in all_classes) {
 
         }
 
-        // console.log(clname, msym.find(clname).print());
-
-        //		console.log(osym.find(clname).print(), clname);
-        //		console.log(msym.find(clname).print(), clname);
-
     } else {
         // this is a basic class
+		
+		// again, make the table map to another table
         osym.add(clname, new symboltable.SymbolTable());
         msym.add(clname, new symboltable.SymbolTable());
 
-        // your mom gets object
+        // everything gets the object's methods
         msym.find(clname).add("abort", ["Object"]);
         msym.find(clname).add("copy", ["SELF_TYPE"]);
         msym.find(clname).add("type_name", ["String"]);
 
-
+		// strings have three built in methods
         if (clname == "String") {
             msym.find(clname).add("length", ["Int"]);
             msym.find(clname).add("concat", ["String", "String"]);
             msym.find(clname).add("substr", ["Int", "Int", "String"]);
         } else if (check(clname, ["Int", "Bool"])) {
-            // just get all of object's stuff?
+            // just get all of object's stuff
+			// none of their own
         } else if (clname == "IO") {
 
+			// IO gets four built in methods
             msym.find(clname).add("out_string", ["String", "SELF_TYPE"]);
             msym.find(clname).add("out_int", ["Int", "SELF_TYPE"]);
             msym.find(clname).add("in_string", ["String"]);
             msym.find(clname).add("in_int", ["Int"]);
 
         } else {
-            //			console.log(clname);
+			// ensure that everything is caught
         }
-        //		console.log(msym.find(clname).print(), clname);
     }
 
 }
 
-
-
-//
-
-
-//console.log(msym.print());
-
-
+// call the above typechecking methods on all of the classes!
 for (ind in all_classes) {
 
+	// if the class is a user class, typecheck it
     if (check(all_classes[ind], user_classes)) {
         var indof = user_classes.indexOf(all_classes[ind]);
 
-        // pass in my symTbl! Should be nothing in it!
+        // pass in the tymbol tables! Should be nothing in it!
         tcheckClass(userClasses[indof], user_classes[indof], osym, msym);
-        //		if(tcheckIt != ""){
-        //			// print an error, maybe?
-        //		}
+       
     }
 }
 
 
-//----------------------- SECTION 7: Create File and Begin Recursion
+//----------------------- SECTION 8: Create File to Print: Class Map, Imp Map, Parent Map, AST
 
-//all_classes.sort();
-// move this over some
+// setupt the files to be printed to
 writeFirst("");
 
+
+// write "class map", ensure the index begins at zero
 write("class_map\n" + all_classes.length + "\n");
 var ind = 0;
+
+// loop through the classes and write about each
 for (ind in all_classes) {
     write("" + all_classes[ind] + "\n");
+	
+	// if the class if a user class, print its methods
     if (check(all_classes[ind], user_classes)) {
+		
+		// get the current class, and the length of it's attributes
         var indof = user_classes.indexOf(all_classes[ind]);
         write(userClasses[indof].attrib.length + "\n");
+		
+		// write each attribute
         for (var i = 0; i < userClasses[indof].attrib.length; i++) {
-
+			// determine if has an init or not to print
             if (userClasses[indof].attrib[i].finit != "") {
                 write("initializer\n" + userClasses[indof].attrib[i].fname.name + "\n" + userClasses[indof].attrib[i].ftype.name + "\n");
                 output_exp(userClasses[indof].attrib[i].finit, true);
@@ -1624,18 +1626,22 @@ for (ind in all_classes) {
             }
         }
     } else {
+		// else it's a base class, no attributes
         write("0\n");
     }
 }
 
-// --------------------- finish the class mapping
-// --------------------- commented out to test imp map
+// finish the class mapping
+
+
+// this function will do the implemenation map for base classes
+// terribly hardcoded, but functional.
 function baseinheritObject(intype) {
-    var meth1 = [];
-
+    // set up a array of methods that will belong to a base class
+	var meth1 = [];
+	
+	// string gets object and string
     if (intype == "String") {
-
-
         meth1.push(methabort);
         meth1.push(copy);
         meth1.push(type_name);
@@ -1643,10 +1649,9 @@ function baseinheritObject(intype) {
         meth1.push(meconcat);
         meth1.push(melen);
         meth1.push(mesubs);
-        // meth1.push();
-    } else if (intype == "IO") {
-
-
+	}
+	// IO gets Object and IO
+	else if (intype == "IO") {
         meth1.push(methabort);
         meth1.push(copy);
         meth1.push(type_name);
@@ -1655,21 +1660,29 @@ function baseinheritObject(intype) {
         meth1.push(out_int);
         meth1.push(out_string);
 
-    } else {
+    }
+	// Int, Bool, Object just get object
+	else {
         meth1.push(methabort);
         meth1.push(copy);
         meth1.push(type_name);
     }
 
+	// print the length of the method array
     write(meth1.length + "\n");
     for (var i = 0; i < meth1.length; i++) {
+		
+		// for sanity, create a vatiable to store the current method
         var internalmeth = meth1[i];
         write(internalmeth.mname.name + "\n");
         write(internalmeth.formals.length + "\n");
-        // write formal names?
+        // write formal names, and the length of the formals
         for (var q = 0; q < internalmeth.formals.length; q++) {
             write(internalmeth.formals[q].fname.name + "\n");
         }
+		
+		// write where the class was defined, where the body starts, the method name
+		// and internal since these are all base classes
         write(internalmeth.definition + "\n");
         write(internalmeth.mbody.eloc + "\n");
         write(internalmeth.mtype.name + "\n");
@@ -1679,20 +1692,20 @@ function baseinheritObject(intype) {
     }
 }
 
+// begin writeing the implementation map
 write("implementation_map\n" + all_classes.length + "\n");
 var ind = 0;
-//console.log("baseclasses: ",base_classes);
-//console.log("all classes: ", all_classes);
+// ensure the index begins at zero, and loop through all of the classes
 for (ind in all_classes) {
-    //	console.log("ind", ind);
-
     write("" + all_classes[ind] + "\n");
 
+	// if the class if a user class
     if (check(all_classes[ind], user_classes)) {
-        // console.log(userClasses[indof].method);
         var indof = user_classes.indexOf(all_classes[ind]);
-
+		
+		// print the length of the method array
         write(userClasses[indof].method.length + "\n");
+		
         // Go through all of the methods in a class
         for (var i = 0; i < userClasses[indof].method.length; i++) {
             // write the method name
@@ -1704,15 +1717,10 @@ for (ind in all_classes) {
                 write(userClasses[indof].method[i].formals[q].fname.name + "\n");
             }
             //Check if this is an internal methid
-            // console.log("I am looping through class: "+ userClasses[indof].cname.name);
-            // console.log("the method is from", userClasses[indof].method[i].definition);
             if (check(userClasses[indof].method[i].definition, base_classes)) {
                 var internalmeth = userClasses[indof].method[i];
-                // write(internalmeth.mname.name + "\n");
-                // write(internalmeth.formals.length + "\n");
-                //				console.log("internal: ",userClasses[indof].method[i].definition);
-                // console.log("internal func",internalmeth.mname.name
 
+				// write a bunch of information if it's an internal method
                 write(internalmeth.definition + "\n");
                 write(internalmeth.mbody.eloc + "\n");
                 write(internalmeth.mtype.name + "\n");
@@ -1723,31 +1731,30 @@ for (ind in all_classes) {
             }
             // this is not an internal method, so do other stuff
             else {
-                // console.log(userClasses[indof].cname.name);
-                // write(userClasses[indof].method[i].mtype.name);
-
-                // console.log("userdefined method name",userClasses[indof].method[i].mname.name);
-
+               	// just write where it's defined and the body
+				// with the flag true to print the type
                 write(userClasses[indof].method[i].definition + "\n");
                 output_exp(userClasses[indof].method[i].mbody, true);
-                //<<do stuff>>
 
             }
             // for loop for all the methds!
         }
     } else {
-        // console.log(all_classes[ind]);
-        baseinheritObject(all_classes[ind]);
+		// this is a base class, so go to the before-mentioned function
+		baseinheritObject(all_classes[ind]);
         // write("0\n");
     }
 }
 
-// ------------------ SECTION IDK: Parent map
+// write the parent map
 write("parent_map\n" + (all_classes.length - 1) + "\n");
+
+// loop through all of the classes again
 for (ind in all_classes) {
     var indof = user_classes.indexOf(all_classes[ind]);
     if (indof == -1) {
-        // this is a base class
+        // this is a base class - therefore inherits object
+		// print as long as it's not actually the object class
         if (all_classes[ind] != "Object") {
             write(all_classes[ind] + "\n");
             write("Object\n");
@@ -1761,25 +1768,33 @@ for (ind in all_classes) {
             write("Object\n");
 
         } else {
+			// if inherits something, write what it inherits
             write(userClasses[indof].inherit.name + "\n");
         }
     }
 }
 
 //------------------SECTION: NEXT ANNOTATED AST
-// ---------------- Look @ python code!
+
 // go through user classes
-// and use their features
+// and use their features which are a mix of methods and attributes
+
+// helper function to output things that look like identifiers
+// have a location and a name
 function outputID(identifier) {
     write(identifier.loc + "\n");
     write(identifier.name + "\n");
 
 }
 
+// write the number of classes, and then start looping through them
+// this array is the order they were read in
 write(user_classes.length + "\n");
 for (ind in user_classes) {
+	// ge the actual current class instead of the string-stand in
     var thisClass = userClasses[ind];
 
+	// output the class name/location and whether or not it inherits
     outputID(thisClass.cname);
     if (thisClass.inherit != "") {
         write("inherits\n");
@@ -1788,49 +1803,53 @@ for (ind in user_classes) {
         write("no_inherits\n");
     }
 
+	// write the number of features, and then loop through all of them to print them
     write(thisClass.features.length + "\n");
     for (var i = 0; i < thisClass.features.length; i++) {
+		
+		// get this feature and determine if it is an attribute or a method
         var myFeat = thisClass.features[i];
 
+		// if it's an attribute it either is init, or no init
         if (myFeat.fmeth == "Attribute") {
             if (myFeat.finit == "") {
+				
+				// if it has no init print the name and type as identifiers
                 write("attribute_no_init\n");
                 outputID(myFeat.fname);
                 outputID(myFeat.ftype);
             } else {
+				
+				// if it has an init print the name, type, and expression
+				// with a flag so that the expression prints its type
                 write("attribute_init\n");
                 outputID(myFeat.fname);
                 outputID(myFeat.ftype);
                 output_exp(myFeat.finit, true);
             }
         } else if (myFeat.fmeth == "Method") {
+			
+			// if it's a method, print the word method and them it's ID
             write("method\n");
             outputID(myFeat.mname);
-            // formals
+			
+            // then print the formals, name and type
             write(myFeat.formals.length + "\n");
             for (var q = 0; q < myFeat.formals.length; q++) {
                 outputID(myFeat.formals[q].fname);
                 outputID(myFeat.formals[q].ftype);
             }
+			
+			// then the return type and the body of the method
+			// with the body's expression's type
             outputID(myFeat.mtype);
             output_exp(myFeat.mbody, true);
         } else {
+			// sanity check, if it's neither attribute nor method it's impossible
             console.log("impossible yo");
         }
     }
-
 }
-
-
-//-------------------------------------------------------
-
-
-
-
-
-
-
-
 
 //-------------------SECTION 8: Helper Functions
 
@@ -1844,9 +1863,10 @@ function write(data) {
     fs.appendFileSync(fname, data);
 }
 
-//Check if 2 arrays are equal
+//Check if 2 arrays (methods in our case) are equal
 function arraysEqual(arr1, arr2) {
 
+	// if they don't have the same length they're not equal
     if (arr1.length != arr2.length) {
         return false;
     }
@@ -1864,7 +1884,6 @@ function arraysEqual(arr1, arr2) {
 
 //check if an item is in a list
 function check(item, list) {
-    //	console.log(item, list);
     for (var index = 0; index < list.length; index++) {
         if (item == list[index]) {
             return true;
@@ -1873,6 +1892,8 @@ function check(item, list) {
     return false;
 }
 
+// get a list of what a class inherits.
+// should begin with Object and end with the initally passed in class
 function inheritList(classname, listsofar) {
     var indof = user_classes.indexOf(classname);
 
@@ -1892,37 +1913,51 @@ function inheritList(classname, listsofar) {
     }
 }
 
+// find the join/LUB of two types
 function leastCommonAncestor(t1, t2) {
     var l1 = inheritList(t1, []);
     var l2 = inheritList(t2, []);
 
+	// get an inheritance list for each
     l1 = l1.reverse();
     l2 = l2.reverse();
+	
+	// double for-loop step through them until something matches
+	// the last object tried will be Object
+	// which is a parent to everything
     for (var i = 0; i < l1.length; i++) {
         for (var j = 0; j < l2.length; j++) {
             if (l1[i] == l2[j]) {
-                // console.log(l1[i]);
                 return l1[i];
             }
         }
     }
 }
 
-
+// returns true of the child is a valid subclass of parent
 function checkInherit(parent, child) {
-    if (parent == child) {
+    // if they're the same, it's ok
+	if (parent == child) {
         return true;
     }
+	
+	// if the child is a user class
     if (user_classes.indexOf(child) != -1) {
         var childsparent = userClasses[user_classes.indexOf(child)].inherit;
 
-
+		// check to see if it inherits
+		// if it does inherit, call again
+		// if it doesn't inherit simply return
         if (childsparent == "") {
+			// noinherit, therefore inherits Object
             return parent == "Object" || parent == child;
+			
         } else if (parent == childsparent.name) {
-            return true;
+            // it's inherit is the parent
+			return true;
         } else {
-            return checkInherit(parent, childsparent.name);
+            // it has some other inherit
+			return checkInherit(parent, childsparent.name);
         }
 
     } else {
