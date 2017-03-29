@@ -1,21 +1,26 @@
-class Silly inherits Main
-{
-		copy() : SELF_TYPE {self};
-		q: SELF_TYPE <- (new Main).main();
+class A {
+	value(x : A) : SELF_TYPE { self};
 };
 
-class Sally inherits Main {
-p : Main <- new SELF_TYPE;
-f : Int <- main()+ main();
+class B inherits A {
 
+
+};
+
+class C inherits B{
+
+
+};
+
+class D inherits C{
+	x : Object <- (new C)@B.value(new SELF_TYPE);
 
 };
 
 class Main inherits IO {
 	var : Object <- 345;
 
-	z : Sally <- (new Sally).copy();
 	y : Object <- 999;
 	a : String <- "divya";
-	main() : SELF_TYPE { 777 };
+	main() : SELF_TYPE { self };
 };

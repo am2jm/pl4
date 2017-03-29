@@ -1307,8 +1307,17 @@ function tcheckExp(expre, classname, objsym, metsym) {
 
 					// if the actual and supposed types are not parent and child, there is an error
                     if (!checkInherit(theMethod[q], expre.ekind.args[q].ekind.rettype)) {
+                      if(expre.ekind.args[q].ekind.rettype.substr(0, 9) == "SELF_TYPE"){
+                        var rettypelen = expre.ekind.args[q].ekind.rettype.length;
+                          if(!checkInherit(theMethod[q], expre.ekind.args[q].ekind.rettype.substr(10, rettypelen))){
+                            console.log("ERROR: " + expre.eloc + ": Type-Check: self dispatch error bad formals!!");
+                            process.exit();
+                          }
+                      }
+                      else{
                         console.log("ERROR: " + expre.eloc + ": Type-Check: self dispatch error bad formals!!");
                         process.exit();
+                      }
                     }
                 }
             } else {
@@ -1428,8 +1437,17 @@ function tcheckExp(expre, classname, objsym, metsym) {
 						// if it's return type is not a vlid subtype of what it says is being passed in
 						// there is an error with the formals
                         if (!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype)) {
+                          if(expre.ekind.arglist[q].ekind.rettype.substr(0, 9) == "SELF_TYPE"){
+                            var rettypelen = expre.ekind.arglist[q].ekind.rettype.length;
+                            if(!checkInherit(theMethod[q], expre.ekind.arglist[q].ekind.rettype.substr(10, rettypelen))){
+                              console.log("ERROR: " + expre.eloc + ": Type-Check: static dispatch error bad formals!!");
+                              process.exit();
+                            }
+
+                          }else{
                             console.log("ERROR: " + expre.eloc + ": Type-Check: static dispatch error bad formals!!");
                             process.exit();
+                          }
                         }
                     }
                 }
@@ -1445,9 +1463,9 @@ function tcheckExp(expre, classname, objsym, metsym) {
                 process.exit();
             }
 
-			// if the specified return type is SELF_TYPE, retur e0, otherwise set it to the expected return type
+			// if the specified return type is SELF_TYPE, retur eo, otherwise set it to the expected return type
             if (finalOne == "SELF_TYPE") {
-                expre.ekind.rettype = e0;
+                expre.ekind.rettype = eo;
             } else {
                 expre.ekind.rettype = finalOne;
             }

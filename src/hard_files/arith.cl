@@ -4,7 +4,7 @@
  *  Tests the arithmetic operations and various other things
  *)
 
-class A {
+class A inherits IO{
 
    var : Int <- 0;
 
@@ -57,30 +57,17 @@ class A {
             fi
    };
 
-   method5(num : Int) : E {  -- factorial
-      (let x : Int <- 1 in
-	 {
-	    (let y : Int <- 1 in
-	       while y <= num loop
-	          {
-                     x <- x * y;
-	             y <- y + 1;
-	          }
-	       pool
-	    );
-	    (new E).set_var(x);
-	 }
-      )
+   method5(num : A) : E {  -- factorial
+      (let x : Int <- 1 in new E  )
    };
 
 };
 
 class B inherits A {  -- B is a number squared
 
-   method5(num : Int) : E { -- square
+   method5(num : A) : E { -- square
       (let x : Int in
 	 {
-            x <- num * num;
 	    (new E).set_var(x);
 	 }
       )
@@ -97,19 +84,17 @@ class C inherits B {
 	    (new A).set_var(var);
          }
       );
-      p;
       }
    };
 
-   method5(num : Int) : E {  -- cube
+   method5(num : A) : E {  -- cube
       (let x : Int in
 	 {
-            x <- num * num * num;
-	    (new E).set_var(x);
+            
 	 }
       )
    };
-
+  t :C <- method5(self);
 };
 
 class D inherits B {

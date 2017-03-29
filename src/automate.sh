@@ -13,9 +13,9 @@ mkdir output
 # diff output/"$filename.cl-type" ref/"$filename.cl-type"
 # done
 #
-filename="arith"
+filename="test-let"
 echo "file: $filename"
-./cool hard_files/"$filename.cl" --type --out output/$filename
-./cool hard_files/"$filename.cl" --parse --out ref/$filename
+./cool temp_test/"$filename.cl" --type --out output/$filename
+./cool temp_test/"$filename.cl" --parse --out ref/$filename
 node main.js ref/"$filename.cl-ast"
 diff output/"$filename.cl-type" ref/"$filename.cl-type"
